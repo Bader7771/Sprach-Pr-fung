@@ -2,14 +2,19 @@
   "name": "school-management-system",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "npm@10",
+  "engines": {
+    "node": "18.x || 20.x",
+    "npm": "10.x"
+  },
   "workspaces": [
     "server",
     "client"
   ],
   "scripts": {
     "install:all": "npm install",
-    "build": "npm run build --prefix client",
-    "vercel-build": "npm run build --prefix client",
+    "build": "npm --prefix client run build",
+    "vercel-build": "npm --prefix client run build",
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "seed": "npm run seed --prefix server"
   },
