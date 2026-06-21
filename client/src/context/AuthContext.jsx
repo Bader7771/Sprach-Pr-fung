@@ -1,0 +1,34 @@
+import { createContext, useContext, useMemo, useState } from 'react';
+import http from '../api/http.js';
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [token, setToken] = useState(localStorage.getItem('sms_token'));
+  const [admin, setAdmin] = useState(() => {
+    const stored = localStorage.getItem('sms_admin');
+    return stored ? JSON.parse(stored) : null;
+  });
+
+  async function login(email, password) {
+    const { data } = await http.post('/auth/login', { email, password });
+    localStorage.setItem('sms_token', data.token);
+    localStorage.setItem('sms_admin', JSON.stringify(data.admin));
+    setToken(data.token);
+    setAdmin(data.admin);
+  }
+
+  function logout() {
+    localStorage.removeItem('sms_token');
+    localStorage.removeItem('sms_admin');
+    setToken(null);
+    setAdmin(null);
+  }
+
+  const value = useMemo(() => ({ token, admin, login, logout }), [token, admin]);
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
