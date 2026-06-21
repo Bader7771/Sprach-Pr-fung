@@ -16,13 +16,15 @@ Add these Environment Variables in Vercel:
 
 - `MONGODB_URI`
 - `JWT_SECRET`
-- `CORS_ORIGIN=https://your-frontend-domain.vercel.app`
+- `CORS_ORIGIN=https://<your-frontend-domain>.vercel.app`
 
-After deploy, test:
+After deploy, test one of these backend URLs:
 
-```text
-https://<your-backend-project>.vercel.app/api/health
-```
+- https://sprach-pr-fung-server.vercel.app/api/health
+- https://sprach-pr-fung-server-git-main-bader7771s-projects.vercel.app/api/health
+- https://sprach-pr-fung-server-prlqbupym-bader7771s-projects.vercel.app/api/health
+
+If you want the client to use the deployed backend, set `VITE_API_URL` to one of the above backend URLs.
 
 ## Frontend
 
