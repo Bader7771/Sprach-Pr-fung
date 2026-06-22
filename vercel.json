@@ -1,6 +1,5 @@
 {
-  "installCommand": "npm install --include=optional",
+  "installCommand": "npm install",
   "buildCommand": "npm run build --workspace=school-management-client",
-  "outputDirectory": "client/dist"
+  "outputDirectory": "client/build"
 }
-

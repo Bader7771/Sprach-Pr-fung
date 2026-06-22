@@ -1,30 +1,30 @@
 # Deployment
 
-The frontend is an npm workspace in `client`. Deploy it from the repository root so Vercel uses the root workspace lockfile and writes the static output to `client/dist`.
+The frontend is an npm workspace in `client`. Deploy it from the repository root so Vercel uses the root workspace lockfile and writes the static output to `client/build`.
 
 ## Frontend on Vercel
 
 Use these settings:
 
 - Root Directory: leave empty / project root
-- Framework Preset: `Vite`
-- Install Command: `npm install --include=optional`
+- Framework Preset: `Create React App`
+- Install Command: `npm install`
 - Build Command: `npm run build --workspace=school-management-client`
-- Output Directory: `client/dist`
+- Output Directory: `client/build`
 
 The root `vercel.json` contains the same frontend settings:
 
 ```json
 {
-  "installCommand": "npm install --include=optional",
+  "installCommand": "npm install",
   "buildCommand": "npm run build --workspace=school-management-client",
-  "outputDirectory": "client/dist"
+  "outputDirectory": "client/build"
 }
 ```
 
 Add this environment variable in Vercel:
 
-- `VITE_API_URL=https://<your-backend-project>.vercel.app`
+- `REACT_APP_API_URL=https://<your-backend-project>.vercel.app`
 
 ## Backend
 
@@ -55,7 +55,7 @@ After deploy, test one of these backend URLs:
 - https://sprach-pr-fung-server-git-main-bader7771s-projects.vercel.app/api/health
 - https://sprach-pr-fung-server-prlqbupym-bader7771s-projects.vercel.app/api/health
 
-Redeploy the frontend after the backend URL is added as `VITE_API_URL`.
+Redeploy the frontend after the backend URL is added as `REACT_APP_API_URL`.
 
 ## Notes
 
