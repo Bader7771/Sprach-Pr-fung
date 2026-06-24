@@ -8,7 +8,7 @@ Use these settings:
 
 - Root Directory: leave empty / project root
 - Framework Preset: `Create React App`
-- Install Command: `npm install`
+- Install Command: `npm install --workspaces --include-workspace-root`
 - Build Command: `GENERATE_SOURCEMAP=false npm run build --workspace=school-management-client`
 - Output Directory: `client/build`
 
@@ -17,7 +17,7 @@ The root `vercel.json` contains the same frontend settings:
 ```json
 {
   "version": 2,
-  "installCommand": "npm install",
+  "installCommand": "npm install --workspaces --include-workspace-root",
   "buildCommand": "GENERATE_SOURCEMAP=false npm run build --workspace=school-management-client",
   "outputDirectory": "client/build",
   "rewrites": [
