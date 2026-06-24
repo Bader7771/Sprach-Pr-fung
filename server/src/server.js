@@ -24,21 +24,28 @@ const vercelOrigins = [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]
   .map((origin) => `https://${origin}`);
 const localOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
 const allowedOrigins = new Set([
+  'https://sprach-pr-fung-client.vercel.app',
   ...configuredOrigins,
   ...vercelOrigins,
   ...(process.env.NODE_ENV === 'production' ? [] : localOrigins)
 ]);
 
-app.use(helmet());
-app.use(cors({
+const corsOptions = {
   origin(origin, callback) {
     if (!origin || allowedOrigins.has(origin)) {
       return callback(null, true);
     }
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
-  credentials: true
-}));
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204
+};
+
+app.use(helmet());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
