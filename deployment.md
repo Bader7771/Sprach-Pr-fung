@@ -1,6 +1,6 @@
 # Deployment
 
-The frontend is an npm workspace in `client`. Deploy it from the repository root so Vercel uses the root workspace lockfile and writes the static output to `client/build`.
+The app is an npm workspace monorepo with the frontend in `client` and the backend in `server`. Deploying from the repository root builds the frontend to `client/build` and serves `/api/*` through the root Vercel serverless function in `api/[...path].js`.
 
 ## Frontend on Vercel
 
@@ -20,7 +20,16 @@ The root `vercel.json` contains the same frontend settings:
   "installCommand": "npm install --workspaces --include-workspace-root",
   "buildCommand": "GENERATE_SOURCEMAP=false npm run build --workspace=school-management-client",
   "outputDirectory": "client/build",
+  "functions": {
+    "api/[...path].js": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
@@ -49,6 +58,8 @@ If you set Vercel's Root Directory to `client`, Vercel will use `client/vercel.j
 Add this environment variable in Vercel:
 
 - `REACT_APP_API_URL=https://<your-backend-project>.vercel.app/api`
+
+If frontend and backend are deployed together from the repository root, `REACT_APP_API_URL` may be omitted because production falls back to same-origin `/api`.
 
 ## Backend
 

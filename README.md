@@ -79,7 +79,7 @@ npm run dev
 ```
 
 - Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:5001/api`
+- Backend API: set with `REACT_APP_API_URL`
 
 ## REST API
 

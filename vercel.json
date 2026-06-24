@@ -3,7 +3,16 @@
   "installCommand": "npm install --workspaces --include-workspace-root",
   "buildCommand": "GENERATE_SOURCEMAP=false npm run build --workspace=school-management-client",
   "outputDirectory": "client/build",
+  "functions": {
+    "api/[...path].js": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
