@@ -13,8 +13,8 @@
   ],
   "scripts": {
     "install:all": "npm install",
-    "build": "npm run build --workspace=school-management-client",
-    "vercel-build": "npm run build --workspace=school-management-client",
+    "build": "GENERATE_SOURCEMAP=false npm run build --workspace=school-management-client",
+    "vercel-build": "GENERATE_SOURCEMAP=false npm run build --workspace=school-management-client",
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "seed": "npm run seed --prefix server"
   },

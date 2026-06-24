@@ -1,7 +1,7 @@
 {
   "version": 2,
   "installCommand": "npm install",
-  "buildCommand": "npm run build --workspace=school-management-client",
+  "buildCommand": "GENERATE_SOURCEMAP=false npm run build --workspace=school-management-client",
   "outputDirectory": "client/build",
   "rewrites": [
     {

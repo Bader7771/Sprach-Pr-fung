@@ -9,7 +9,7 @@ Use these settings:
 - Root Directory: leave empty / project root
 - Framework Preset: `Create React App`
 - Install Command: `npm install`
-- Build Command: `npm run build --workspace=school-management-client`
+- Build Command: `GENERATE_SOURCEMAP=false npm run build --workspace=school-management-client`
 - Output Directory: `client/build`
 
 The root `vercel.json` contains the same frontend settings:
@@ -18,7 +18,7 @@ The root `vercel.json` contains the same frontend settings:
 {
   "version": 2,
   "installCommand": "npm install",
-  "buildCommand": "npm run build --workspace=school-management-client",
+  "buildCommand": "GENERATE_SOURCEMAP=false npm run build --workspace=school-management-client",
   "outputDirectory": "client/build",
   "rewrites": [
     {
@@ -35,7 +35,7 @@ If you set Vercel's Root Directory to `client`, Vercel will use `client/vercel.j
 {
   "version": 2,
   "installCommand": "npm install",
-  "buildCommand": "npm run build",
+  "buildCommand": "GENERATE_SOURCEMAP=false npm run build",
   "outputDirectory": "build",
   "rewrites": [
     {
@@ -48,23 +48,18 @@ If you set Vercel's Root Directory to `client`, Vercel will use `client/vercel.j
 
 Add this environment variable in Vercel:
 
-- `REACT_APP_API_URL=https://<your-backend-project>.vercel.app`
+- `REACT_APP_API_URL=https://<your-backend-project>.vercel.app/api`
 
 ## Backend
 
-The backend in `server/src/server.js` is a normal Express app that calls `app.listen()`. Do not deploy it as the same Vercel frontend project, and do not use the client build command for it.
+Deploy the backend as a separate Vercel project with Root Directory set to `server`. The server folder contains its own `vercel.json`, so Vercel will install server dependencies and will not run the frontend `react-scripts` build command.
 
-Recommended production options:
-
-- Deploy the backend on Render, Railway, Fly.io, or another Node server host.
-- Or convert the Express routes to Vercel serverless API functions before deploying the backend on Vercel.
-
-If you still create a separate Vercel project for the current server folder, use these settings:
+Use these settings:
 
 - Root Directory: `server`
 - Framework Preset: `Other`
 - Install Command: `npm install`
-- Build Command: leave empty
+- Build Command: leave empty / use `server/vercel.json`
 - Output Directory: leave empty
 
 Add these Environment Variables in Vercel:
@@ -72,6 +67,7 @@ Add these Environment Variables in Vercel:
 - `MONGODB_URI`
 - `JWT_SECRET`
 - `CLIENT_URL=https://<your-frontend-domain>.vercel.app`
+- Optional for multiple frontend domains: `CLIENT_URLS=https://<production-domain>,https://<preview-domain>`
 
 After deploy, test one of these backend URLs:
 

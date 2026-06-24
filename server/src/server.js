@@ -15,11 +15,15 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+const configuredOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const localOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
 const allowedOrigins = new Set([
-  process.env.CLIENT_URL,
-  'http://localhost:5173',
-  'http://127.0.0.1:5173'
-].filter(Boolean));
+  ...configuredOrigins,
+  ...(process.env.NODE_ENV === 'production' ? [] : localOrigins)
+]);
 
 app.use(helmet());
 app.use(cors({
@@ -45,9 +49,13 @@ app.use('/api/analytics', analyticsRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-connectDB()
-  .then(() => app.listen(PORT, () => console.log(`API running on port ${PORT}`)))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+export default app;
+
+if (!process.env.VERCEL) {
+  connectDB()
+    .then(() => app.listen(PORT, () => console.log(`API running on port ${PORT}`)))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}
