@@ -16,9 +16,33 @@ The root `vercel.json` contains the same frontend settings:
 
 ```json
 {
+  "version": 2,
   "installCommand": "npm install",
   "buildCommand": "npm run build --workspace=school-management-client",
-  "outputDirectory": "client/build"
+  "outputDirectory": "client/build",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+```
+
+If you set Vercel's Root Directory to `client`, Vercel will use `client/vercel.json` instead:
+
+```json
+{
+  "version": 2,
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
 ```
 
