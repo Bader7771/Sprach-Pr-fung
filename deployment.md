@@ -20,11 +20,6 @@ The root `vercel.json` contains the same frontend settings:
   "installCommand": "npm install --workspaces --include-workspace-root",
   "buildCommand": "GENERATE_SOURCEMAP=false npm run build --workspace=school-management-client",
   "outputDirectory": "client/build",
-  "functions": {
-    "api/[...path].js": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -57,9 +52,9 @@ If you set Vercel's Root Directory to `client`, Vercel will use `client/vercel.j
 
 Add this environment variable in the frontend Vercel project:
 
-- `REACT_APP_API_URL=https://<your-backend-project>.vercel.app/api`
+- `REACT_APP_API_URL=https://sprach-pr-fung-server-bader7771s-projects.vercel.app/api`
 
-Do not leave `REACT_APP_API_URL` empty for the separate frontend deployment. If it is missing, the app fails fast instead of sending browser requests to the frontend domain. The backend URL must be a public deployment; Vercel SSO-protected preview URLs will not work for browser API calls.
+The app has the same backend URL as a fallback so React does not crash if the variable is missing, but the frontend Vercel environment variable should still be set explicitly. The backend deployment must be public; Vercel SSO-protected preview URLs will not work for browser API calls.
 
 ## Backend
 
