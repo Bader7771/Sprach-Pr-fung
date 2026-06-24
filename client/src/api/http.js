@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const apiBaseURL = process.env.REACT_APP_API_URL || '/api';
+const apiBaseURL = process.env.REACT_APP_API_URL;
+
+if (!apiBaseURL) {
+  throw new Error('REACT_APP_API_URL is required. Set it to the deployed backend URL ending in /api.');
+}
 
 const http = axios.create({
   baseURL: apiBaseURL

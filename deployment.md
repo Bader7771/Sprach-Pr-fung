@@ -55,11 +55,11 @@ If you set Vercel's Root Directory to `client`, Vercel will use `client/vercel.j
 }
 ```
 
-Add this environment variable in Vercel:
+Add this environment variable in the frontend Vercel project:
 
 - `REACT_APP_API_URL=https://<your-backend-project>.vercel.app/api`
 
-If frontend and backend are deployed together from the repository root, `REACT_APP_API_URL` may be omitted because production falls back to same-origin `/api`.
+Do not leave `REACT_APP_API_URL` empty for the separate frontend deployment. If it is missing, the app fails fast instead of sending browser requests to the frontend domain. The backend URL must be a public deployment; Vercel SSO-protected preview URLs will not work for browser API calls.
 
 ## Backend
 
