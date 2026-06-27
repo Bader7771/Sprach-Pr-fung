@@ -19,17 +19,21 @@ const configuredOrigins = (env.CLIENT_URLS || env.CLIENT_URL || '')
   .split(',')
   .map(normalizeOrigin)
   .filter(Boolean);
+
 const vercelOrigins = [env.VERCEL_URL, env.VERCEL_BRANCH_URL]
   .filter(Boolean)
   .map((origin) => `https://${origin}`);
+
 const localOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
   'http://localhost:5173',
   'http://127.0.0.1:5173'
 ];
+
 const allowedOrigins = new Set([
   'https://sprach-pr-fung-client.vercel.app',
+  'https://sprach-pr-fung-client-git-main-bader7771s-projects.vercel.app',
   ...configuredOrigins,
   ...vercelOrigins,
   ...(env.NODE_ENV === 'production' ? [] : localOrigins)
@@ -37,9 +41,15 @@ const allowedOrigins = new Set([
 
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.has(normalizeOrigin(origin))) {
-      return callback(null, true);
-    }
+    if (!origin) return callback(null, true);
+
+    const normalized = normalizeOrigin(origin);
+
+    const isAllowed =
+      allowedOrigins.has(normalized) ||
+      /^https:\/\/sprach-pr-fung-client.*\.vercel\.app$/.test(normalized);
+
+    if (isAllowed) return callback(null, true);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,
