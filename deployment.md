@@ -1,6 +1,6 @@
 # Deployment
 
-The app is an npm workspace monorepo with the frontend in `client` and the backend in `server`. Deploying from the repository root builds the frontend to `client/build` and serves `/api/*` through the root Vercel serverless function in `api/[...path].js`.
+The app is an npm workspace monorepo with the frontend in `client` and the backend in `server`. Deploy them as separate Vercel projects. The frontend is a static Create React App deployment; the backend is an Express API served by `server/api/[...path].js`.
 
 ## Frontend on Vercel
 
@@ -16,15 +16,12 @@ The root `vercel.json` contains the same frontend settings:
 
 ```json
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "installCommand": "npm install --workspaces --include-workspace-root",
   "buildCommand": "GENERATE_SOURCEMAP=false npm run build --workspace=school-management-client",
   "outputDirectory": "client/build",
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
@@ -37,6 +34,7 @@ If you set Vercel's Root Directory to `client`, Vercel will use `client/vercel.j
 
 ```json
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "installCommand": "npm install",
   "buildCommand": "GENERATE_SOURCEMAP=false npm run build",
@@ -50,11 +48,11 @@ If you set Vercel's Root Directory to `client`, Vercel will use `client/vercel.j
 }
 ```
 
-Add this environment variable in the frontend Vercel project:
+Add this environment variable in the frontend Vercel project. It must point to a public backend production alias, not an SSO-protected preview URL:
 
-- `REACT_APP_API_URL=https://sprach-pr-fung-server-bader7771s-projects.vercel.app/api`
+- `REACT_APP_API_URL=https://sprach-pr-fung-server.vercel.app/api`
 
-The app has the same backend URL as a fallback so React does not crash if the variable is missing, but the frontend Vercel environment variable should still be set explicitly. The backend deployment must be public; Vercel SSO-protected preview URLs will not work for browser API calls.
+The app has the same backend URL as a production fallback so React does not crash if the variable is missing, but the frontend Vercel environment variable should still be set explicitly. The backend deployment must be public; Vercel SSO-protected preview URLs will not work for browser API calls because browser preflight requests cannot follow the SSO redirect.
 
 ## Backend
 
@@ -68,11 +66,21 @@ Use these settings:
 - Build Command: leave empty / use `server/vercel.json`
 - Output Directory: leave empty
 
+The backend `server/vercel.json` should be:
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "installCommand": "npm install"
+}
+```
+
 Add these Environment Variables in Vercel:
 
 - `MONGODB_URI`
 - `JWT_SECRET`
-- `CLIENT_URL=https://<your-frontend-domain>.vercel.app`
+- `CLIENT_URL=https://sprach-pr-fung-client.vercel.app`
 - Optional for multiple frontend domains: `CLIENT_URLS=https://<production-domain>,https://<preview-domain>`
 
 After deploy, test one of these backend URLs:

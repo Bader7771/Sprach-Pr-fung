@@ -1,4 +1,4 @@
-import app from '../src/server.js';
+import app from '../src/app.js';
 import { connectDB } from '../src/config/db.js';
 
 let dbConnection;
@@ -8,6 +8,10 @@ export default async function handler(req, res) {
     const pathParam = req.query?.path;
     const path = Array.isArray(pathParam) ? pathParam.join('/') : pathParam;
     req.url = `/api/${path || ''}`;
+  }
+
+  if (req.method === 'OPTIONS') {
+    return app(req, res);
   }
 
   dbConnection ||= connectDB();

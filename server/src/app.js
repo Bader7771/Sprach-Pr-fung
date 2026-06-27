@@ -1,0 +1,67 @@
+import cors from 'cors';
+import dotenv from 'dotenv';
+import express from 'express';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import morgan from 'morgan';
+import analyticsRoutes from './routes/analyticsRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import classRoutes from './routes/classRoutes.js';
+import studentRoutes from './routes/studentRoutes.js';
+import { errorHandler, notFound } from './middleware/error.js';
+
+dotenv.config();
+
+const configuredOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const vercelOrigins = [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]
+  .filter(Boolean)
+  .map((origin) => `https://${origin}`);
+const localOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173'
+];
+const allowedOrigins = new Set([
+  'https://sprach-pr-fung-client.vercel.app',
+  ...configuredOrigins,
+  ...vercelOrigins,
+  ...(process.env.NODE_ENV === 'production' ? [] : localOrigins)
+]);
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204
+};
+
+const app = express();
+
+app.use(helmet());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 500 }));
+
+app.get('/api/health', (req, res) => res.json({ ok: true }));
+app.use('/api/auth', authRoutes);
+app.use('/api/classes', classRoutes);
+app.use('/api/students', studentRoutes);
+app.use('/api/analytics', analyticsRoutes);
+
+app.use(notFound);
+app.use(errorHandler);
+
+export default app;
