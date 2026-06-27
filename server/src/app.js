@@ -1,27 +1,25 @@
 import cors from 'cors';
-import dotenv from 'dotenv';
 import express from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
+import { env } from './config/env.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import classRoutes from './routes/classRoutes.js';
 import studentRoutes from './routes/studentRoutes.js';
 import { errorHandler, notFound } from './middleware/error.js';
 
-dotenv.config();
-
 function normalizeOrigin(origin) {
   if (!origin) return '';
   return origin.trim().replace(/\/$/, '');
 }
 
-const configuredOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
+const configuredOrigins = (env.CLIENT_URLS || env.CLIENT_URL || '')
   .split(',')
   .map(normalizeOrigin)
   .filter(Boolean);
-const vercelOrigins = [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]
+const vercelOrigins = [env.VERCEL_URL, env.VERCEL_BRANCH_URL]
   .filter(Boolean)
   .map((origin) => `https://${origin}`);
 const localOrigins = [
@@ -34,7 +32,7 @@ const allowedOrigins = new Set([
   'https://sprach-pr-fung-client.vercel.app',
   ...configuredOrigins,
   ...vercelOrigins,
-  ...(process.env.NODE_ENV === 'production' ? [] : localOrigins)
+  ...(env.NODE_ENV === 'production' ? [] : localOrigins)
 ]);
 
 const corsOptions = {

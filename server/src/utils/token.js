@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken';
+import { env, requireEnv } from '../config/env.js';
 
 export function signToken(admin) {
   return jwt.sign(
     { id: admin._id, email: admin.email, role: admin.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    requireEnv('JWT_SECRET'),
+    { expiresIn: env.JWT_EXPIRES_IN }
   );
 }

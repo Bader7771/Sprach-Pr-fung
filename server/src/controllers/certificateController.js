@@ -1,4 +1,5 @@
 import PDFDocument from 'pdfkit';
+import { env } from '../config/env.js';
 import Student from '../models/Student.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { writeAudit } from '../services/auditService.js';
@@ -18,7 +19,7 @@ export const generateCertificate = asyncHandler(async (req, res) => {
   res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
   doc.pipe(res);
 
-  const schoolName = process.env.SCHOOL_NAME || 'German School';
+  const schoolName = env.SCHOOL_NAME;
   doc.rect(28, 28, 539, 785).lineWidth(2).stroke('#1f2937');
   doc.rect(40, 40, 515, 761).lineWidth(0.7).stroke('#9ca3af');
 

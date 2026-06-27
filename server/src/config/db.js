@@ -1,11 +1,8 @@
 import mongoose from 'mongoose';
+import { requireEnv } from './env.js';
 
 export async function connectDB() {
-  if (!process.env.MONGODB_URI) {
-    throw new Error('MONGODB_URI is required');
-  }
-
   mongoose.set('strictQuery', true);
-  await mongoose.connect(process.env.MONGODB_URI);
+  await mongoose.connect(requireEnv('MONGODB_URI'));
   console.log('MongoDB connected');
 }

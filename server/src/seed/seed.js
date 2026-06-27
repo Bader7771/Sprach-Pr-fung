@@ -1,13 +1,12 @@
-import dotenv from 'dotenv';
 import { connectDB } from '../config/db.js';
+import { validateEnv } from '../config/env.js';
 import Admin from '../models/Admin.js';
 import ClassRoom from '../models/ClassRoom.js';
 import Result from '../models/Result.js';
 import Student from '../models/Student.js';
 
-dotenv.config();
-
 async function run() {
+  validateEnv();
   await connectDB();
   await Promise.all([Admin.deleteMany(), ClassRoom.deleteMany(), Student.deleteMany(), Result.deleteMany()]);
 
