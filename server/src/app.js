@@ -12,9 +12,14 @@ import { errorHandler, notFound } from './middleware/error.js';
 
 dotenv.config();
 
+function normalizeOrigin(origin) {
+  if (!origin) return '';
+  return origin.trim().replace(/\/$/, '');
+}
+
 const configuredOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
   .split(',')
-  .map((origin) => origin.trim())
+  .map(normalizeOrigin)
   .filter(Boolean);
 const vercelOrigins = [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]
   .filter(Boolean)
@@ -34,7 +39,7 @@ const allowedOrigins = new Set([
 
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.has(origin)) {
+    if (!origin || allowedOrigins.has(normalizeOrigin(origin))) {
       return callback(null, true);
     }
     return callback(new Error(`CORS blocked for origin: ${origin}`));
@@ -47,13 +52,19 @@ const corsOptions = {
 
 const app = express();
 
+app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 500 }));
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 500,
+  standardHeaders: true,
+  legacyHeaders: false
+}));
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRoutes);

@@ -1,6 +1,6 @@
 # Deployment
 
-The app is an npm workspace monorepo with the frontend in `client` and the backend in `server`. Deploy them as separate Vercel projects. The frontend is a static Create React App deployment; the backend is an Express API served by `server/api/[...path].js`.
+The app is an npm workspace monorepo with the frontend in `client` and the backend in `server`. Deploy them as separate Vercel projects. The frontend is a static Create React App deployment; the backend is an Express API served by `server/api/index.js`.
 
 ## Frontend on Vercel
 
@@ -72,7 +72,13 @@ The backend `server/vercel.json` should be:
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    }
+  ]
 }
 ```
 
