@@ -1,8 +1,14 @@
 import mongoose from 'mongoose';
-import { requireEnv } from './env.js';
+import { requireMongoUri } from './env.js';
 
 export async function connectDB() {
   mongoose.set('strictQuery', true);
-  await mongoose.connect(requireEnv('MONGODB_URI'));
-  console.log('MongoDB connected');
+
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
+  const connection = await mongoose.connect(requireMongoUri());
+  console.log(`MongoDB connected: ${connection.connection.name}`);
+  return connection.connection;
 }

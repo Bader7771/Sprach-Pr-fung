@@ -7,8 +7,18 @@ export function notFound(req, res, next) {
 
 export function errorHandler(err, req, res, next) {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+
+  console.error('Request failed', {
+    message: err.message,
+    stack: err.stack,
+    method: req.method,
+    url: req.originalUrl
+  });
+
   res.status(statusCode).json({
-    message: err.message || 'Server error',
+    message: env.NODE_ENV === 'production' && statusCode >= 500
+      ? 'Server error'
+      : err.message || 'Server error',
     details: env.NODE_ENV === 'production' ? undefined : err.stack
   });
 }

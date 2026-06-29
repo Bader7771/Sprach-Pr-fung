@@ -84,9 +84,10 @@ The backend `server/vercel.json` should be:
 
 Add these Environment Variables in Vercel:
 
-- `MONGODB_URI`
+- `MONGO_URI` - must include the database name after `.net/`, for example `mongodb+srv://USERNAME:PASSWORD@cluster0.jgmt3xp.mongodb.net/sprach_prufung?retryWrites=true&w=majority&appName=Cluster0`
 - `JWT_SECRET`
 - `CLIENT_URL=https://sprach-pr-fung-client.vercel.app`
+- `NODE_ENV=production`
 - Optional for multiple frontend domains: `CLIENT_URLS=https://<production-domain>,https://<preview-domain>`
 
 After deploy, test one of these backend URLs:

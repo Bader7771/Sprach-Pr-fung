@@ -17,8 +17,16 @@ export default async function handler(req, res) {
     await dbConnection;
     return app(req, res);
   } catch (error) {
-    console.error(`Startup failed: ${error.message}`);
+    dbConnection = undefined;
+    console.error('Startup failed', {
+      message: error.message,
+      stack: error.stack,
+      method: req.method,
+      url: req.url
+    });
     applyCorsHeaders(req, res);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      message: process.env.NODE_ENV === 'production' ? 'Server startup failed' : error.message
+    });
   }
 }

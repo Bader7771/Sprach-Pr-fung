@@ -57,7 +57,7 @@ cp server/.env.example server/.env
 cp client/.env.example client/.env
 ```
 
-3. Start MongoDB locally or set `MONGODB_URI` in `server/.env`.
+3. Start MongoDB locally or set `MONGO_URI` in `server/.env`. The URI must include a database name after the host.
 
 4. Seed sample data:
 
