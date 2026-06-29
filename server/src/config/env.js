@@ -18,7 +18,7 @@ export function requireEnv(name) {
 }
 
 export function getMongoUri() {
-  return getEnv('MONGO_URI') || getEnv('MONGODB_URI');
+  return sanitizeMongoUri(getEnv('MONGO_URI') || getEnv('MONGODB_URI'));
 }
 
 export function requireMongoUri() {
@@ -39,6 +39,19 @@ function hasDatabaseName(mongoUri) {
   }
 }
 
+function hasMongoScheme(mongoUri) {
+  return mongoUri.startsWith('mongodb://') || mongoUri.startsWith('mongodb+srv://');
+}
+
+function sanitizeMongoUri(mongoUri) {
+  const trimmed = mongoUri.trim();
+  const isQuoted =
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"));
+
+  return isQuoted ? trimmed.slice(1, -1).trim() : trimmed;
+}
+
 export function validateEnv(requiredEnvVars = REQUIRED_ENV_VARS) {
   const missing = requiredEnvVars.filter((name) => {
     if (name === 'MONGO_URI') return !getMongoUri();
@@ -54,6 +67,14 @@ export function validateEnv(requiredEnvVars = REQUIRED_ENV_VARS) {
   }
 
   const mongoUri = getMongoUri();
+  if (mongoUri && mongoUri.startsWith('MONGO_URI=')) {
+    throw new Error('MONGO_URI must contain only the MongoDB connection string, not MONGO_URI=...');
+  }
+
+  if (mongoUri && !hasMongoScheme(mongoUri)) {
+    throw new Error('MONGO_URI must start with mongodb:// or mongodb+srv://');
+  }
+
   if (mongoUri && !hasDatabaseName(mongoUri)) {
     throw new Error('MONGO_URI must include a database name after the host, for example mongodb+srv://.../sprach_prufung?retryWrites=true&w=majority');
   }
