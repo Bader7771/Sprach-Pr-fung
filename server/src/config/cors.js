@@ -1,6 +1,6 @@
 import { env } from './env.js';
 
-const CORS_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'];
+const CORS_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
 const CORS_HEADERS = ['Content-Type', 'Authorization'];
 
 export function normalizeOrigin(origin) {

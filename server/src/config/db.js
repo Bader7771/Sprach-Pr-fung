@@ -8,7 +8,15 @@ export async function connectDB() {
     return mongoose.connection;
   }
 
-  const connection = await mongoose.connect(requireMongoUri());
-  console.log(`MongoDB connected: ${connection.connection.name}`);
-  return connection.connection;
+  try {
+    const connection = await mongoose.connect(requireMongoUri());
+    console.log(`MongoDB connected: ${connection.connection.name}`);
+    return connection.connection;
+  } catch (error) {
+    console.error('MongoDB connection failed', {
+      message: error.message,
+      stack: error.stack
+    });
+    throw error;
+  }
 }

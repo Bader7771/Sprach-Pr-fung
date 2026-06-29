@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const apiBaseURL =
   process.env.REACT_APP_API_URL ||
+  process.env.VITE_API_URL ||
   (process.env.NODE_ENV === 'production'
     ? 'https://sprach-pr-fung-server.vercel.app/api'
     : 'http://localhost:5001/api');

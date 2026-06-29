@@ -48,9 +48,10 @@ If you set Vercel's Root Directory to `client`, Vercel will use `client/vercel.j
 }
 ```
 
-Add this environment variable in the frontend Vercel project. It must point to a public backend production alias, not an SSO-protected preview URL:
+Add this environment variable in the frontend Vercel project. This app is Create React App, so `REACT_APP_API_URL` is the canonical build-time variable. `VITE_API_URL` is also tolerated by the code, but Vercel should use `REACT_APP_API_URL` unless the frontend is migrated to Vite. The URL must point to a public backend production alias, not an SSO-protected preview URL:
 
 - `REACT_APP_API_URL=https://sprach-pr-fung-server.vercel.app/api`
+- Optional compatibility variable: `VITE_API_URL=https://sprach-pr-fung-server.vercel.app/api`
 
 The app has the same backend URL as a production fallback so React does not crash if the variable is missing, but the frontend Vercel environment variable should still be set explicitly. The backend deployment must be public; Vercel SSO-protected preview URLs will not work for browser API calls because browser preflight requests cannot follow the SSO redirect.
 

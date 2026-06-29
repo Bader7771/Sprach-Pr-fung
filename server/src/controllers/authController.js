@@ -1,4 +1,5 @@
 import Admin from '../models/Admin.js';
+import { getEnv } from '../config/env.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { signToken } from '../utils/token.js';
 
@@ -33,12 +34,19 @@ export async function login(req, res) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    if (!getEnv('JWT_SECRET')) {
+      throw new Error('Missing required environment variable: JWT_SECRET');
+    }
+
     return res.json({
       token: signToken(admin),
       admin: { id: admin._id, name: admin.name, email: admin.email, role: admin.role }
     });
   } catch (error) {
     logLoginError(error, req);
+    if (error.message === 'Missing required environment variable: JWT_SECRET') {
+      return res.status(500).json({ message: 'Server configuration error' });
+    }
     return res.status(500).json({ message: 'Login failed' });
   }
 }
