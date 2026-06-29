@@ -29,7 +29,7 @@ export function requireMongoUri() {
   return value;
 }
 
-function hasDatabaseName(mongoUri) {
+export function hasMongoDatabaseName(mongoUri) {
   try {
     const parsed = new URL(mongoUri);
     return parsed.pathname && parsed.pathname !== '/';
@@ -39,7 +39,7 @@ function hasDatabaseName(mongoUri) {
   }
 }
 
-function hasMongoScheme(mongoUri) {
+export function hasMongoScheme(mongoUri) {
   return mongoUri.startsWith('mongodb://') || mongoUri.startsWith('mongodb+srv://');
 }
 
@@ -75,7 +75,7 @@ export function validateEnv(requiredEnvVars = REQUIRED_ENV_VARS) {
     throw new Error('MONGO_URI must start with mongodb:// or mongodb+srv://');
   }
 
-  if (mongoUri && !hasDatabaseName(mongoUri)) {
+  if (mongoUri && !hasMongoDatabaseName(mongoUri)) {
     throw new Error('MONGO_URI must include a database name after the host, for example mongodb+srv://.../sprach_prufung?retryWrites=true&w=majority');
   }
 }

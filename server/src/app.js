@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import { corsOptions } from './config/cors.js';
-import { env, getMongoUri } from './config/env.js';
+import { env, getMongoUri, hasMongoDatabaseName, hasMongoScheme } from './config/env.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import classRoutes from './routes/classRoutes.js';
@@ -29,9 +29,12 @@ app.use(rateLimit({
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.get('/api/debug/env', (req, res) => {
+  const mongoUri = getMongoUri();
   res.json({
     nodeEnv: env.NODE_ENV,
-    hasMongoUri: Boolean(getMongoUri()),
+    hasMongoUri: Boolean(mongoUri),
+    mongoUriHasValidScheme: mongoUri ? hasMongoScheme(mongoUri) : false,
+    mongoUriHasDatabaseName: mongoUri ? hasMongoDatabaseName(mongoUri) : false,
     hasJwtSecret: Boolean(process.env.JWT_SECRET),
     clientUrl: env.CLIENT_URL || null,
     hasClientUrls: Boolean(env.CLIENT_URLS)

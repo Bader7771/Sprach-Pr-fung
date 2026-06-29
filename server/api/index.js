@@ -1,7 +1,7 @@
 import app from '../src/app.js';
 import { applyCorsHeaders } from '../src/config/cors.js';
 import { connectDB } from '../src/config/db.js';
-import { env, getMongoUri, validateEnv } from '../src/config/env.js';
+import { env, getMongoUri, hasMongoDatabaseName, hasMongoScheme, validateEnv } from '../src/config/env.js';
 
 let dbConnection;
 
@@ -12,10 +12,13 @@ export default async function handler(req, res) {
   }
 
   if (req.url?.startsWith('/api/debug/env')) {
+    const mongoUri = getMongoUri();
     applyCorsHeaders(req, res);
     return res.status(200).json({
       nodeEnv: env.NODE_ENV,
-      hasMongoUri: Boolean(getMongoUri()),
+      hasMongoUri: Boolean(mongoUri),
+      mongoUriHasValidScheme: mongoUri ? hasMongoScheme(mongoUri) : false,
+      mongoUriHasDatabaseName: mongoUri ? hasMongoDatabaseName(mongoUri) : false,
       hasJwtSecret: Boolean(process.env.JWT_SECRET),
       clientUrl: env.CLIENT_URL || null,
       hasClientUrls: Boolean(env.CLIENT_URLS)
