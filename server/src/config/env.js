@@ -22,7 +22,7 @@ export function requireEnv(name) {
 }
 
 export function getMongoUri() {
-  return sanitizeMongoUri(getEnv('MONGO_URI'));
+  return sanitizeMongoUri(getEnv('MONGO_URI') || getEnv('MONGODB_URI'));
 }
 
 export function requireMongoUri() {

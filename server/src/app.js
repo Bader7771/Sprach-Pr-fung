@@ -6,7 +6,7 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 import { corsOptions } from './config/cors.js';
 import { getDatabaseStatus } from './config/db.js';
-import { getEnv } from './config/env.js';
+import { getEnv, getMongoUri } from './config/env.js';
 import Admin from './models/Admin.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import authRoutes from './routes/authRoutes.js';
@@ -55,7 +55,9 @@ app.get('/api/health/auth', (req, res) => {
     databaseConnected: mongoReadyState === 1,
     mongoReadyState,
     jwtSecretConfigured: Boolean(getEnv('JWT_SECRET')),
-    mongoUriConfigured: Boolean(getEnv('MONGO_URI')),
+    mongoUriConfigured: Boolean(getMongoUri()),
+    mongoUriPrimaryConfigured: Boolean(getEnv('MONGO_URI')),
+    mongoUriAliasConfigured: Boolean(getEnv('MONGODB_URI')),
     userCollection: Admin.collection.name
   });
 });

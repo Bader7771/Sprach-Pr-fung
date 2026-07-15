@@ -59,6 +59,7 @@ After deployment, open the browser Network tab and confirm API requests target `
 Use MongoDB Atlas with the existing `MONGO_URI` variable.
 
 - The URI must include the production database name: `/school_management`.
+- `MONGO_URI` is the required production variable. `MONGODB_URI` is accepted only as a compatibility fallback for older deployments.
 - Special characters in the database password must be URL encoded.
 - The database user must have read/write permissions for the target database.
 - Atlas Network Access must allow Vercel serverless functions to connect. The common quick option is `0.0.0.0/0`, which allows connections from any IP address; use it only with strong database credentials and least-privilege users, or replace it with a tighter access strategy if your hosting/network setup supports one.

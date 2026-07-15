@@ -1,6 +1,7 @@
 import Admin from '../models/Admin.js';
 import mongoose from 'mongoose';
 import { connectDB } from '../config/db.js';
+import { getMongoUri } from '../config/env.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { signToken } from '../utils/token.js';
 
@@ -41,7 +42,7 @@ export async function login(req, res, next) {
       });
     }
 
-    if (!process.env.MONGO_URI) {
+    if (!getMongoUri()) {
       throw new Error('MONGO_URI is not configured');
     }
 
