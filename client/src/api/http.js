@@ -24,6 +24,14 @@ function normalizeApiOrigin(value) {
 export const apiOrigin = normalizeApiOrigin(process.env.REACT_APP_API_URL);
 export const apiBaseURL = `${apiOrigin}/api`;
 
+function getRequestUrl(config) {
+  try {
+    return new URL(config.url || '', config.baseURL || apiBaseURL).toString();
+  } catch {
+    return `${config.baseURL || apiBaseURL}${config.url || ''}`;
+  }
+}
+
 export function getErrorMessage(error) {
   if (!error.response) {
     return 'Backend unavailable. Please check the server deployment and network connection.';
@@ -45,6 +53,12 @@ const http = axios.create({
 http.interceptors.request.use((config) => {
   const token = localStorage.getItem('sms_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (config.url?.includes('/auth/login')) {
+    console.info('Auth request', {
+      method: (config.method || 'get').toUpperCase(),
+      url: getRequestUrl(config)
+    });
+  }
   return config;
 });
 
@@ -54,6 +68,15 @@ http.interceptors.response.use(
     error.userMessage = getErrorMessage(error);
 
     const isLoginRequest = error.config?.url?.includes('/auth/login');
+    if (isLoginRequest) {
+      console.warn('Auth response error', {
+        method: (error.config?.method || 'get').toUpperCase(),
+        url: getRequestUrl(error.config || {}),
+        status: error.response?.status,
+        body: error.response?.data
+      });
+    }
+
     if (error.response?.status === 401 && !isLoginRequest) {
       localStorage.removeItem('sms_token');
       localStorage.removeItem('sms_admin');

@@ -17,7 +17,7 @@ export function errorHandler(err, req, res, next) {
 
   console.error('Request failed', {
     message: err.message,
-    stack: isProduction ? undefined : err.stack,
+    stack: err.stack,
     method: req.method,
     url: req.originalUrl
   });
@@ -25,11 +25,11 @@ export function errorHandler(err, req, res, next) {
   res.status(responseStatus).json({
     success: false,
     message: isConfigError
-      ? 'Server configuration error'
+      ? 'Internal server error'
       : isDatabaseConnectionError
-        ? 'Database unavailable'
+        ? 'Internal server error'
         : isProduction && responseStatus >= 500
-          ? 'Server error'
+          ? 'Internal server error'
           : err.message || 'Server error',
     details: isProduction ? undefined : err.stack
   });

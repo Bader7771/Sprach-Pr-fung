@@ -74,6 +74,14 @@ SEED_ADMIN_EMAIL=admin@school.com
 SEED_ADMIN_PASSWORD=replace_with_a_temporary_local_seed_password
 ```
 
+To create only an admin without sample classes/students, run this manually from a trusted shell:
+
+```bash
+ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=replace_with_a_strong_password npm run seed:admin --prefix server
+```
+
+Set `OVERWRITE_ADMIN=true` only when you intentionally want to replace an existing admin password.
+
 For local development only, `RESET_SEED_DATA=true npm run seed --prefix server` clears and recreates sample data. The script refuses this reset when `NODE_ENV=production`.
 
 ## Troubleshooting

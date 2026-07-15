@@ -89,6 +89,17 @@ npm run dev
 - `POST /api/auth/login`
 - `GET /api/auth/me`
 
+Login request body:
+
+```json
+{
+  "email": "admin@example.com",
+  "password": "your-password"
+}
+```
+
+Successful login returns `success`, `token`, and `user`.
+
 ### Classes
 
 - `GET /api/classes`
@@ -165,3 +176,11 @@ See [deployment.md](./deployment.md) for exact Vercel settings, MongoDB Atlas no
 `npm run seed` is non-destructive by default. It creates the sample admin and sample data only when missing. To create a missing admin, set `SEED_ADMIN_PASSWORD` in `server/.env` or in your shell for that one seed run.
 
 For local development only, use `RESET_SEED_DATA=true npm run seed` to reset sample data. The seed script blocks this reset in production.
+
+To create one admin explicitly without seeding sample students:
+
+```bash
+ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=replace_with_a_strong_password npm run seed:admin --prefix server
+```
+
+Set `OVERWRITE_ADMIN=true` only when you intentionally want to replace an existing admin password.
