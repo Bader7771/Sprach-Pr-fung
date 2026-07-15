@@ -3,13 +3,14 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { getErrorMessage } from '../api/http.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const { register, handleSubmit } = useForm({ defaultValues: { email: 'admin@school.com', password: 'Admin12345' } });
+  const { register, handleSubmit } = useForm({ defaultValues: { email: '', password: '' } });
 
   async function submit(values) {
     try {
@@ -18,7 +19,7 @@ export default function Login() {
       toast.success('Logged in');
       navigate('/admin');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      toast.error(error.userMessage || getErrorMessage(error));
     } finally {
       setLoading(false);
     }

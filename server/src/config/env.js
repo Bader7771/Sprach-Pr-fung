@@ -18,7 +18,7 @@ export function requireEnv(name) {
 }
 
 export function getMongoUri() {
-  return sanitizeMongoUri(getEnv('MONGO_URI') || getEnv('MONGODB_URI'));
+  return sanitizeMongoUri(getEnv('MONGO_URI'));
 }
 
 export function requireMongoUri() {
@@ -81,6 +81,7 @@ export function validateEnv(requiredEnvVars = REQUIRED_ENV_VARS) {
 }
 
 export const env = {
+  ALLOWED_ORIGINS: getEnv('ALLOWED_ORIGINS'),
   CLIENT_URL: getEnv('CLIENT_URL'),
   CLIENT_URLS: getEnv('CLIENT_URLS'),
   JWT_EXPIRES_IN: getEnv('JWT_EXPIRES_IN', '7d'),

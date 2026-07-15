@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import http from '../api/http.js';
 import StudentTable from '../components/StudentTable.jsx';
 
@@ -11,10 +12,15 @@ export default function PublicPortal() {
 
   async function search(event) {
     event.preventDefault();
-    setLoading(true);
-    const { data } = await http.get('/students/public', { params: { ...filters, limit: 50 } });
-    setStudents(data.data);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const { data } = await http.get('/students/public', { params: { ...filters, limit: 50 } });
+      setStudents(data.data);
+    } catch (error) {
+      toast.error(error.userMessage || 'Search failed');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

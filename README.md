@@ -25,6 +25,8 @@ client/
   src/pages/
   src/styles/app.css
 server/
+  api/index.js
+  vercel.json
   src/config/db.js
   src/controllers/
   src/middleware/
@@ -59,17 +61,16 @@ cp client/.env.example client/.env
 
 3. Start MongoDB locally or set `MONGO_URI` in `server/.env`. The URI must include a database name after the host.
 
-4. Seed sample data:
+4. Seed sample data. Set `SEED_ADMIN_PASSWORD` in `server/.env` first if the sample admin does not already exist:
 
 ```bash
 npm run seed
 ```
 
-Sample admin:
+Sample admin email:
 
 ```text
 email: admin@school.com
-password: Admin12345
 ```
 
 5. Run both apps:
@@ -78,7 +79,7 @@ password: Admin12345
 npm run dev
 ```
 
-- Frontend: `http://localhost:5173`
+- Frontend: `http://localhost:3000`
 - Backend API: set with `REACT_APP_API_URL`
 
 ## REST API
@@ -119,3 +120,48 @@ Full Name | Class Name | Group Number | Exam 1 | Exam 2 | Exam 3 | Exam 4
 ```
 
 The importer creates missing class/group records automatically.
+
+## Environment Variables
+
+Backend `server/.env`:
+
+```text
+MONGO_URI=mongodb+srv://username:password@cluster.example.mongodb.net/sprach_prufung
+JWT_SECRET=replace_with_a_long_random_secret
+CLIENT_URL=https://sprach-pr-fung-client.vercel.app
+ALLOWED_ORIGINS=https://sprach-pr-fung-client.vercel.app,http://localhost:3000,http://localhost:5173
+NODE_ENV=development
+PORT=5001
+SEED_ADMIN_EMAIL=admin@school.com
+SEED_ADMIN_PASSWORD=replace_with_a_temporary_local_seed_password
+```
+
+Frontend `client/.env`:
+
+```text
+REACT_APP_API_URL=https://sprach-pr-fung-server.vercel.app
+```
+
+This is a Create React App frontend, so production builds use `REACT_APP_API_URL`. The value should be the backend origin only; the Axios client appends `/api`.
+
+## Health Checks
+
+- `GET /`
+- `GET /api/health`
+
+The backend returns JSON for unknown routes, including unknown `/api/*` routes.
+
+## Deployment
+
+Deploy the same repository as two Vercel projects:
+
+- Frontend Root Directory: `client`
+- Backend Root Directory: `server`
+
+See [deployment.md](./deployment.md) for exact Vercel settings, MongoDB Atlas notes, and troubleshooting steps.
+
+## Safe Seeding
+
+`npm run seed` is non-destructive by default. It creates the sample admin and sample data only when missing. To create a missing admin, set `SEED_ADMIN_PASSWORD` in `server/.env` or in your shell for that one seed run.
+
+For local development only, use `RESET_SEED_DATA=true npm run seed` to reset sample data. The seed script blocks this reset in production.

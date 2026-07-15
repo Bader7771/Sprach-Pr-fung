@@ -31,45 +31,56 @@ export default function Dashboard() {
   }, [dark]);
 
   async function load(nextPage = page, nextQuery = query) {
-    setLoading(true);
-    const [classRes, studentRes, analyticsRes] = await Promise.all([
-      http.get('/classes'),
-      http.get('/students', { params: { page: nextPage, search: nextQuery } }),
-      http.get('/analytics')
-    ]);
-    setClasses(classRes.data);
-    setStudents(studentRes.data.data);
-    setPages(studentRes.data.pages);
-    setAnalytics(analyticsRes.data);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const [classRes, studentRes, analyticsRes] = await Promise.all([
+        http.get('/classes'),
+        http.get('/students', { params: { page: nextPage, search: nextQuery } }),
+        http.get('/analytics')
+      ]);
+      setClasses(classRes.data);
+      setStudents(studentRes.data.data);
+      setPages(studentRes.data.pages);
+      setAnalytics(analyticsRes.data);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
-    load().catch((error) => toast.error(error.response?.data?.message || 'Failed to load dashboard'));
+    load().catch((error) => toast.error(error.userMessage || 'Failed to load dashboard'));
   }, [page]);
 
   async function submitClass(values) {
-    if (classEdit) {
-      await http.put(`/classes/${classEdit._id}`, values);
-      toast.success('Class updated');
-    } else {
-      await http.post('/classes', values);
-      toast.success('Class created');
+    try {
+      if (classEdit) {
+        await http.put(`/classes/${classEdit._id}`, values);
+        toast.success('Class updated');
+      } else {
+        await http.post('/classes', values);
+        toast.success('Class created');
+      }
+      setClassEdit(null);
+      await load();
+    } catch (error) {
+      toast.error(error.userMessage || 'Class save failed');
     }
-    setClassEdit(null);
-    await load();
   }
 
   async function submitStudent(values) {
-    if (studentEdit) {
-      await http.put(`/students/${studentEdit._id}`, values);
-      toast.success('Student updated');
-    } else {
-      await http.post('/students', values);
-      toast.success('Student added');
+    try {
+      if (studentEdit) {
+        await http.put(`/students/${studentEdit._id}`, values);
+        toast.success('Student updated');
+      } else {
+        await http.post('/students', values);
+        toast.success('Student added');
+      }
+      setStudentEdit(null);
+      await load();
+    } catch (error) {
+      toast.error(error.userMessage || 'Student save failed');
     }
-    setStudentEdit(null);
-    await load();
   }
 
   async function deleteClass(item) {
@@ -78,50 +89,68 @@ export default function Dashboard() {
       toast.success('Class deleted');
       await load();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Delete failed');
+      toast.error(error.userMessage || 'Delete failed');
     } finally {
       setConfirm(null);
     }
   }
 
   async function deleteStudent(item) {
-    await http.delete(`/students/${item._id}`);
-    toast.success('Student deleted');
-    setConfirm(null);
-    await load();
+    try {
+      await http.delete(`/students/${item._id}`);
+      toast.success('Student deleted');
+      await load();
+    } catch (error) {
+      toast.error(error.userMessage || 'Delete failed');
+    } finally {
+      setConfirm(null);
+    }
   }
 
   async function certificate(student) {
-    const response = await http.get(`/students/${student._id}/certificate`, { responseType: 'blob' });
-    const url = URL.createObjectURL(response.data);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${student.fullName.replace(/\s+/g, '_')}_certificate.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
-    toast.success('Certificate downloaded');
-    await load();
+    try {
+      const response = await http.get(`/students/${student._id}/certificate`, { responseType: 'blob' });
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${student.fullName.replace(/\s+/g, '_')}_certificate.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success('Certificate downloaded');
+      await load();
+    } catch (error) {
+      toast.error(error.userMessage || 'Certificate download failed');
+    }
   }
 
   async function exportExcel() {
-    const response = await http.get('/students/export/excel', { responseType: 'blob' });
-    const url = URL.createObjectURL(response.data);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'students.xlsx';
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      const response = await http.get('/students/export/excel', { responseType: 'blob' });
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'students.xlsx';
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(error.userMessage || 'Export failed');
+    }
   }
 
   async function importExcel(event) {
     const file = event.target.files?.[0];
     if (!file) return;
-    const form = new FormData();
-    form.append('file', file);
-    const { data } = await http.post('/students/import/excel', form);
-    toast.success(`Imported ${data.created} students`);
-    event.target.value = '';
-    await load();
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const { data } = await http.post('/students/import/excel', form);
+      toast.success(`Imported ${data.created} students`);
+      await load();
+    } catch (error) {
+      toast.error(error.userMessage || 'Import failed');
+    } finally {
+      event.target.value = '';
+    }
   }
 
   const bestStudent = useMemo(() => analytics.bestStudent?.fullName || 'No students yet', [analytics]);

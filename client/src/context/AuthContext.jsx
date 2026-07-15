@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import http from '../api/http.js';
 
 const AuthContext = createContext(null);
@@ -7,7 +7,12 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem('sms_token'));
   const [admin, setAdmin] = useState(() => {
     const stored = localStorage.getItem('sms_admin');
-    return stored ? JSON.parse(stored) : null;
+    try {
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      localStorage.removeItem('sms_admin');
+      return null;
+    }
   });
 
   async function login(email, password) {
@@ -24,6 +29,11 @@ export function AuthProvider({ children }) {
     setToken(null);
     setAdmin(null);
   }
+
+  useEffect(() => {
+    window.addEventListener('sms:unauthorized', logout);
+    return () => window.removeEventListener('sms:unauthorized', logout);
+  }, []);
 
   const value = useMemo(() => ({ token, admin, login, logout }), [token, admin]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

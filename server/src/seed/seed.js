@@ -8,20 +8,45 @@ import Student from '../models/Student.js';
 async function run() {
   validateEnv();
   await connectDB();
-  await Promise.all([Admin.deleteMany(), ClassRoom.deleteMany(), Student.deleteMany(), Result.deleteMany()]);
 
-  const admin = await Admin.create({
-    name: 'School Admin',
-    email: 'admin@school.com',
-    password: 'Admin12345',
-    role: 'admin'
-  });
+  if (process.env.RESET_SEED_DATA === 'true') {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('RESET_SEED_DATA cannot be used when NODE_ENV=production');
+    }
 
-  const classes = await ClassRoom.insertMany([
+    await Promise.all([Admin.deleteMany(), ClassRoom.deleteMany(), Student.deleteMany(), Result.deleteMany()]);
+  }
+
+  const seedAdminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@school.com';
+  let admin = await Admin.findOne({ email: seedAdminEmail });
+  if (!admin) {
+    if (!process.env.SEED_ADMIN_PASSWORD) {
+      throw new Error('SEED_ADMIN_PASSWORD is required to create the seed admin');
+    }
+
+    admin = await Admin.create({
+      name: 'School Admin',
+      email: seedAdminEmail,
+      password: process.env.SEED_ADMIN_PASSWORD,
+      role: 'admin'
+    });
+  }
+
+  const classSeeds = [
     { className: '1st Year', groupNumber: 'Group A' },
     { className: '1st Year', groupNumber: 'Group B' },
     { className: '2nd Year', groupNumber: 'Group A' }
-  ]);
+  ];
+  const classes = [];
+
+  for (const item of classSeeds) {
+    const classRoom = await ClassRoom.findOneAndUpdate(
+      item,
+      item,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    classes.push(classRoom);
+  }
 
   const samples = [
     ['Amina Benali', classes[0], [14, 16, 12, 18]],
@@ -31,20 +56,27 @@ async function run() {
   ];
 
   for (const [fullName, classRoom, exams] of samples) {
-    const student = new Student({
-      fullName,
-      classRoom: classRoom._id,
-      className: classRoom.className,
-      groupNumber: classRoom.groupNumber,
-      exams: { exam1: exams[0], exam2: exams[1], exam3: exams[2], exam4: exams[3] },
-      createdBy: admin._id
-    });
-    await student.save();
-    await Result.create({ student: student._id, exams: student.exams, finalNote: student.finalNote });
+    let student = await Student.findOne({ fullName, className: classRoom.className, groupNumber: classRoom.groupNumber });
+    if (!student) {
+      student = new Student({
+        fullName,
+        classRoom: classRoom._id,
+        className: classRoom.className,
+        groupNumber: classRoom.groupNumber,
+        exams: { exam1: exams[0], exam2: exams[1], exam3: exams[2], exam4: exams[3] },
+        createdBy: admin._id
+      });
+      await student.save();
+    }
+    await Result.findOneAndUpdate(
+      { student: student._id },
+      { student: student._id, exams: student.exams, finalNote: student.finalNote },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
   }
 
   console.log('Seed complete');
-  console.log('Admin login: admin@school.com / Admin12345');
+  console.log(`Admin login email: ${seedAdminEmail}`);
   process.exit(0);
 }
 

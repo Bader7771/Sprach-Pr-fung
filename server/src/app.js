@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import { corsOptions } from './config/cors.js';
-import { env, getMongoUri, hasMongoDatabaseName, hasMongoScheme } from './config/env.js';
+import { getDatabaseStatus } from './config/db.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import classRoutes from './routes/classRoutes.js';
@@ -27,19 +27,22 @@ app.use(rateLimit({
   legacyHeaders: false
 }));
 
-app.get('/api/health', (req, res) => res.json({ ok: true }));
-app.get('/api/debug/env', (req, res) => {
-  const mongoUri = getMongoUri();
+app.get('/', (req, res) => {
   res.json({
-    nodeEnv: env.NODE_ENV,
-    hasMongoUri: Boolean(mongoUri),
-    mongoUriHasValidScheme: mongoUri ? hasMongoScheme(mongoUri) : false,
-    mongoUriHasDatabaseName: mongoUri ? hasMongoDatabaseName(mongoUri) : false,
-    hasJwtSecret: Boolean(process.env.JWT_SECRET),
-    clientUrl: env.CLIENT_URL || null,
-    hasClientUrls: Boolean(env.CLIENT_URLS)
+    success: true,
+    message: 'Sprach Prüfung API is running'
   });
 });
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    service: 'Sprach Prüfung API',
+    database: getDatabaseStatus(),
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/students', studentRoutes);

@@ -5,10 +5,12 @@ const CORS_HEADERS = ['Content-Type', 'Authorization'];
 
 export function normalizeOrigin(origin) {
   if (!origin) return '';
-  return origin.trim().replace(/\/$/, '');
+  return origin.trim().replace(/\/+$/, '');
 }
 
-const configuredOrigins = (env.CLIENT_URLS || env.CLIENT_URL || '')
+const configuredOrigins = [env.CLIENT_URL, env.ALLOWED_ORIGINS, env.CLIENT_URLS]
+  .filter(Boolean)
+  .join(',')
   .split(',')
   .map(normalizeOrigin)
   .filter(Boolean);
@@ -29,7 +31,7 @@ const allowedOrigins = new Set([
   'https://sprach-pr-fung-client-git-main-bader7771s-projects.vercel.app',
   ...configuredOrigins,
   ...vercelOrigins,
-  ...(env.NODE_ENV === 'production' ? [] : localOrigins)
+  ...localOrigins
 ]);
 
 export function isOriginAllowed(origin) {
@@ -48,7 +50,6 @@ export const corsOptions = {
     if (isOriginAllowed(origin)) return callback(null, true);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
-  credentials: true,
   methods: CORS_METHODS,
   allowedHeaders: CORS_HEADERS,
   optionsSuccessStatus: 204
@@ -62,7 +63,6 @@ export function applyCorsHeaders(req, res) {
     res.setHeader('Vary', 'Origin');
   }
 
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', CORS_METHODS.join(','));
   res.setHeader('Access-Control-Allow-Headers', CORS_HEADERS.join(','));
 }
