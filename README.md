@@ -159,8 +159,10 @@ This is a Create React App frontend, so production builds use `REACT_APP_API_URL
 
 - `GET /`
 - `GET /api/health`
+- `GET /api/health/auth`
 
 The backend returns JSON for unknown routes, including unknown `/api/*` routes.
+`/api/health/auth` is a temporary safe diagnostic endpoint for auth deployment checks; it does not expose secrets or user data.
 
 ## Deployment
 

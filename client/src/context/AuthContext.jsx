@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import http from '../api/http.js';
+import http, { buildApiUrl } from '../api/http.js';
 
 const AuthContext = createContext(null);
 
@@ -16,7 +16,15 @@ export function AuthProvider({ children }) {
   });
 
   async function login(email, password) {
-    const { data } = await http.post('/auth/login', { email, password });
+    const payload = { email, password };
+    console.log('Login request', {
+      method: 'POST',
+      url: buildApiUrl('/auth/login'),
+      fields: Object.keys(payload)
+    });
+    const { data } = await http.post('/auth/login', payload, {
+      headers: { 'Content-Type': 'application/json' }
+    });
     const user = data.user || data.admin;
     localStorage.setItem('sms_token', data.token);
     localStorage.setItem('sms_admin', JSON.stringify(user));

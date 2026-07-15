@@ -24,12 +24,13 @@ function normalizeApiOrigin(value) {
 export const apiOrigin = normalizeApiOrigin(process.env.REACT_APP_API_URL);
 export const apiBaseURL = `${apiOrigin}/api`;
 
+export function buildApiUrl(path) {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${apiBaseURL}${normalizedPath}`;
+}
+
 function getRequestUrl(config) {
-  try {
-    return new URL(config.url || '', config.baseURL || apiBaseURL).toString();
-  } catch {
-    return `${config.baseURL || apiBaseURL}${config.url || ''}`;
-  }
+  return buildApiUrl(config.url || '');
 }
 
 export function getErrorMessage(error) {

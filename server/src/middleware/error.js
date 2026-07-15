@@ -11,11 +11,15 @@ export function errorHandler(err, req, res, next) {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   const isProduction = env.NODE_ENV === 'production';
   const isValidationError = err.name === 'ZodError' || err.name === 'ValidationError' || err.name === 'CastError';
-  const isConfigError = err.message?.startsWith('Missing required environment variable');
+  const isConfigError =
+    err.message?.startsWith('Missing required environment variable') ||
+    err.message === 'MONGO_URI is not configured' ||
+    err.message === 'JWT_SECRET is not configured';
   const isDatabaseConnectionError = err.name === 'MongooseServerSelectionError' || err.name === 'MongoServerSelectionError';
   const responseStatus = isValidationError ? 400 : statusCode;
 
   console.error('Request failed', {
+    requestId: req.requestId,
     message: err.message,
     stack: err.stack,
     method: req.method,
@@ -31,6 +35,7 @@ export function errorHandler(err, req, res, next) {
         : isProduction && responseStatus >= 500
           ? 'Internal server error'
           : err.message || 'Server error',
+    requestId: req.requestId,
     details: isProduction ? undefined : err.stack
   });
 }
