@@ -1,47 +1,43 @@
-import { Download, Edit, FileText, Trash2 } from 'lucide-react';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 
-export default function StudentTable({ students, onEdit, onDelete, onCertificate, showActions = true }) {
+function studentName(student) {
+  return student.fullName || [student.firstName, student.lastName].filter(Boolean).join(' ');
+}
+
+export default function StudentTable({ students, onView, onEdit, onDelete }) {
   return (
     <div className="tableWrap">
       <table>
         <thead>
           <tr>
-            <th>Student Name</th>
-            <th>Class</th>
-            <th>Group</th>
-            <th>Exam 1</th>
-            <th>Exam 2</th>
-            <th>Exam 3</th>
-            <th>Exam 4</th>
-            <th>Final Note</th>
-            {showActions && <th>Actions</th>}
+            <th>Full Name</th>
+            <th>Student Number</th>
+            <th>Notes</th>
+            <th>Average</th>
+            <th>Created</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {students.map((student) => (
             <tr key={student._id}>
-              <td>{student.fullName}</td>
-              <td>{student.className}</td>
-              <td>{student.groupNumber}</td>
-              <td>{student.exams.exam1}</td>
-              <td>{student.exams.exam2}</td>
-              <td>{student.exams.exam3}</td>
-              <td>{student.exams.exam4}</td>
-              <td><strong>{student.finalNote}</strong></td>
-              {showActions && (
-                <td>
-                  <div className="rowActions">
-                    <button className="iconBtn" onClick={() => onEdit(student)} title="Edit"><Edit size={16} /></button>
-                    <button className="iconBtn" onClick={() => onCertificate(student)} title="Generate and download certificate"><FileText size={16} /><Download size={14} /></button>
-                    <button className="iconBtn dangerText" onClick={() => onDelete(student)} title="Delete"><Trash2 size={16} /></button>
-                  </div>
-                </td>
-              )}
+              <td><strong>{studentName(student)}</strong></td>
+              <td>{student.studentNumber || '-'}</td>
+              <td>{student.notes?.length || 0}</td>
+              <td><strong>{Number(student.finalNote || 0).toFixed(2)}</strong></td>
+              <td>{student.createdAt ? new Date(student.createdAt).toLocaleDateString() : '-'}</td>
+              <td>
+                <div className="rowActions">
+                  <button className="iconBtn" onClick={() => onView(student)} title="View student"><Eye size={16} /></button>
+                  <button className="iconBtn" onClick={() => onEdit(student)} title="Edit student"><Pencil size={16} /></button>
+                  <button className="iconBtn dangerText" onClick={() => onDelete(student)} title="Delete student"><Trash2 size={16} /></button>
+                </div>
+              </td>
             </tr>
           ))}
           {!students.length && (
             <tr>
-              <td colSpan={showActions ? 9 : 8} className="empty">No students found.</td>
+              <td colSpan="6" className="empty">No students yet.</td>
             </tr>
           )}
         </tbody>

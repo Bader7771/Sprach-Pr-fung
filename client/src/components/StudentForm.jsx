@@ -1,20 +1,18 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
-const empty = { fullName: '', classRoom: '', exam1: 0, exam2: 0, exam3: 0, exam4: 0 };
+const empty = { firstName: '', lastName: '', studentNumber: '', comments: '' };
 
-export default function StudentForm({ classes, editing, onSubmit, onCancel }) {
+export default function StudentForm({ editing, onSubmit, onCancel }) {
   const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({ defaultValues: empty });
 
   useEffect(() => {
     if (editing) {
       reset({
-        fullName: editing.fullName,
-        classRoom: editing.classRoom,
-        exam1: editing.exams.exam1,
-        exam2: editing.exams.exam2,
-        exam3: editing.exams.exam3,
-        exam4: editing.exams.exam4
+        firstName: editing.firstName || editing.fullName?.split(' ')[0] || '',
+        lastName: editing.lastName || editing.fullName?.split(' ').slice(1).join(' ') || '',
+        studentNumber: editing.studentNumber || '',
+        comments: editing.comments || ''
       });
     } else {
       reset(empty);
@@ -24,24 +22,21 @@ export default function StudentForm({ classes, editing, onSubmit, onCancel }) {
   return (
     <form className="formGrid studentForm" onSubmit={handleSubmit(onSubmit)}>
       <label>
-        Full Name
-        <input {...register('fullName', { required: true })} placeholder="Student full name" />
+        First Name
+        <input {...register('firstName', { required: true })} placeholder="Ahmed" />
       </label>
       <label>
-        Class / Group
-        <select {...register('classRoom', { required: true })}>
-          <option value="">Select class</option>
-          {classes.map((item) => (
-            <option key={item._id} value={item._id}>{item.className} - {item.groupNumber}</option>
-          ))}
-        </select>
+        Last Name
+        <input {...register('lastName', { required: true })} placeholder="Mohamed" />
       </label>
-      {[1, 2, 3, 4].map((n) => (
-        <label key={n}>
-          Exam {n} Note
-          <input type="number" min="0" max="20" step="0.01" {...register(`exam${n}`, { required: true, valueAsNumber: true })} />
-        </label>
-      ))}
+      <label>
+        Student Number
+        <input {...register('studentNumber')} placeholder="Optional" />
+      </label>
+      <label className="wide">
+        Comments
+        <textarea {...register('comments')} placeholder="Optional comments" rows="3" />
+      </label>
       <div className="formActions wide">
         {editing && <button type="button" className="btn ghost" onClick={onCancel}>Cancel</button>}
         <button className="btn primary" disabled={isSubmitting}>{editing ? 'Update Student' : 'Add Student'}</button>

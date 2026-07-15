@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import Dashboard from './pages/Dashboard.jsx';
 import Login from './pages/Login.jsx';
-import PublicPortal from './pages/PublicPortal.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 
 function ProtectedRoute({ children }) {
@@ -15,7 +14,7 @@ export default function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<PublicPortal />} />
+        <Route path="/" element={<Navigate to="/admin" replace />} />
         <Route path="/login" element={<Login />} />
         <Route
           path="/admin"

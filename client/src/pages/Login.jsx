@@ -1,7 +1,7 @@
 import { GraduationCap } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getErrorMessage } from '../api/http.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -30,13 +30,12 @@ export default function Login() {
       <section className="authPanel">
         <div className="brandMark"><GraduationCap size={30} /></div>
         <h1>Admin Login</h1>
-        <p>Secure access to classes, student results, certificates, and reports.</p>
+        <p>Secure access to EGIM classes, students, notes, and averages.</p>
         <form onSubmit={handleSubmit(submit)}>
           <label>Email<input type="email" {...register('email', { required: true })} /></label>
           <label>Password<input type="password" {...register('password', { required: true })} /></label>
           <button className="btn primary full" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</button>
         </form>
-        <Link to="/">Open public student portal</Link>
       </section>
     </main>
   );

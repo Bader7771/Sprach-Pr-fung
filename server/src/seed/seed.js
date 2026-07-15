@@ -1,86 +1,50 @@
 import { connectDB } from '../config/db.js';
 import { validateEnv } from '../config/env.js';
 import Admin from '../models/Admin.js';
-import ClassRoom from '../models/ClassRoom.js';
-import Result from '../models/Result.js';
-import Student from '../models/Student.js';
 
 async function run() {
   validateEnv();
+
+  const email = process.env.ADMIN_EMAIL || process.env.SEED_ADMIN_EMAIL || 'Bilaladmin@egim.ma';
+  const password = process.env.ADMIN_PASSWORD || process.env.SEED_ADMIN_PASSWORD;
+  const overwrite = process.env.OVERWRITE_ADMIN === 'true';
+
+  if (!password) {
+    throw new Error('ADMIN_PASSWORD or SEED_ADMIN_PASSWORD is required');
+  }
+
   await connectDB();
 
-  if (process.env.RESET_SEED_DATA === 'true') {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('RESET_SEED_DATA cannot be used when NODE_ENV=production');
-    }
+  const normalizedEmail = email.trim().toLowerCase();
+  const admin = await Admin.findOne({ email: normalizedEmail });
 
-    await Promise.all([Admin.deleteMany(), ClassRoom.deleteMany(), Student.deleteMany(), Result.deleteMany()]);
+  if (admin && !overwrite) {
+    console.log(`Admin already exists: ${normalizedEmail}`);
+    console.log('Set OVERWRITE_ADMIN=true to update this account.');
+    process.exit(0);
   }
 
-  const seedAdminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@school.com';
-  let admin = await Admin.findOne({ email: seedAdminEmail });
-  if (!admin) {
-    if (!process.env.SEED_ADMIN_PASSWORD) {
-      throw new Error('SEED_ADMIN_PASSWORD is required to create the seed admin');
-    }
-
-    admin = await Admin.create({
-      name: 'School Admin',
-      email: seedAdminEmail,
-      password: process.env.SEED_ADMIN_PASSWORD,
-      role: 'admin'
-    });
+  if (admin) {
+    admin.name = 'EGIM Admin';
+    admin.password = password;
+    admin.role = 'admin';
+    await admin.save();
+    console.log(`Admin updated: ${normalizedEmail}`);
+    process.exit(0);
   }
 
-  const classSeeds = [
-    { className: '1st Year', groupNumber: 'Group A' },
-    { className: '1st Year', groupNumber: 'Group B' },
-    { className: '2nd Year', groupNumber: 'Group A' }
-  ];
-  const classes = [];
+  await Admin.create({
+    name: 'EGIM Admin',
+    email: normalizedEmail,
+    password,
+    role: 'admin'
+  });
 
-  for (const item of classSeeds) {
-    const classRoom = await ClassRoom.findOneAndUpdate(
-      item,
-      item,
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
-    classes.push(classRoom);
-  }
-
-  const samples = [
-    ['Amina Benali', classes[0], [14, 16, 12, 18]],
-    ['Youssef Amrani', classes[0], [17, 15, 16, 19]],
-    ['Sara Haddad', classes[1], [13, 14, 15, 16]],
-    ['Omar El Fassi', classes[2], [18, 18, 17, 19]]
-  ];
-
-  for (const [fullName, classRoom, exams] of samples) {
-    let student = await Student.findOne({ fullName, className: classRoom.className, groupNumber: classRoom.groupNumber });
-    if (!student) {
-      student = new Student({
-        fullName,
-        classRoom: classRoom._id,
-        className: classRoom.className,
-        groupNumber: classRoom.groupNumber,
-        exams: { exam1: exams[0], exam2: exams[1], exam3: exams[2], exam4: exams[3] },
-        createdBy: admin._id
-      });
-      await student.save();
-    }
-    await Result.findOneAndUpdate(
-      { student: student._id },
-      { student: student._id, exams: student.exams, finalNote: student.finalNote },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
-  }
-
-  console.log('Seed complete');
-  console.log(`Admin login email: ${seedAdminEmail}`);
+  console.log(`Admin created: ${normalizedEmail}`);
   process.exit(0);
 }
 
 run().catch((error) => {
-  console.error(error);
+  console.error(error.message);
   process.exit(1);
 });

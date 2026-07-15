@@ -1,27 +1,23 @@
 import express from 'express';
-import multer from 'multer';
 import {
+  addNote,
   createStudent,
+  deleteNote,
   deleteStudent,
-  exportStudents,
   getStudent,
-  importStudents,
   listStudents,
+  updateNote,
   updateStudent
 } from '../controllers/studentController.js';
-import { generateCertificate } from '../controllers/certificateController.js';
-import { requireDatabase } from '../config/db.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
 
-router.get('/public', requireDatabase, listStudents);
 router.use(protect);
-router.get('/export/excel', exportStudents);
-router.post('/import/excel', upload.single('file'), importStudents);
 router.route('/').get(listStudents).post(createStudent);
 router.route('/:id').get(getStudent).put(updateStudent).delete(deleteStudent);
-router.get('/:id/certificate', generateCertificate);
+router.post('/:id/notes', addNote);
+router.put('/:id/notes/:noteId', updateNote);
+router.delete('/:id/notes/:noteId', deleteNote);
 
 export default router;

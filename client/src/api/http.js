@@ -7,7 +7,7 @@ function getDefaultApiOrigin() {
     return PRODUCTION_API_ORIGIN;
   }
 
-  return `${window.location.protocol}//${window.location.hostname}:5001`;
+  return `${window.location.protocol}//${window.location.hostname}:5000`;
 }
 
 function normalizeApiOrigin(value) {

@@ -1,55 +1,82 @@
-import { Download, LogOut, Search, Upload } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { LogOut, Plus, Search, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import http from '../api/http.js';
 import ClassForm from '../components/ClassForm.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
+import NoteForm from '../components/NoteForm.jsx';
 import StatCard from '../components/StatCard.jsx';
 import StudentForm from '../components/StudentForm.jsx';
 import StudentTable from '../components/StudentTable.jsx';
-import ThemeToggle from '../components/ThemeToggle.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+
+function studentName(student) {
+  return student?.fullName || [student?.firstName, student?.lastName].filter(Boolean).join(' ');
+}
 
 export default function Dashboard() {
   const { admin, logout } = useAuth();
-  const fileRef = useRef(null);
-  const [dark, setDark] = useState(localStorage.getItem('sms_theme') === 'dark');
   const [classes, setClasses] = useState([]);
   const [students, setStudents] = useState([]);
-  const [analytics, setAnalytics] = useState({});
+  const [analytics, setAnalytics] = useState({ recentStudents: [] });
+  const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [classEdit, setClassEdit] = useState(null);
   const [studentEdit, setStudentEdit] = useState(null);
+  const [showStudentForm, setShowStudentForm] = useState(false);
+  const [noteEdit, setNoteEdit] = useState(null);
   const [confirm, setConfirm] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
-  const [pages, setPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-    localStorage.setItem('sms_theme', dark ? 'dark' : 'light');
-  }, [dark]);
+  const selectedClass = useMemo(
+    () => classes.find((item) => item._id === selectedClassId),
+    [classes, selectedClassId]
+  );
 
-  async function load(nextPage = page, nextQuery = query) {
+  async function loadClasses() {
+    const [{ data: classData }, { data: analyticsData }] = await Promise.all([
+      http.get('/classes'),
+      http.get('/analytics')
+    ]);
+    setClasses(classData);
+    setAnalytics(analyticsData);
+    if (!selectedClassId && classData.length) setSelectedClassId(classData[0]._id);
+  }
+
+  async function loadStudents(classId = selectedClassId, search = query) {
+    if (!classId) {
+      setStudents([]);
+      return;
+    }
+    const { data } = await http.get('/students', {
+      params: { classId, search, limit: 200 }
+    });
+    setStudents(data.data);
+    if (selectedStudent) {
+      const refreshed = data.data.find((item) => item._id === selectedStudent._id);
+      setSelectedStudent(refreshed || null);
+    }
+  }
+
+  async function loadAll() {
     try {
       setLoading(true);
-      const [classRes, studentRes, analyticsRes] = await Promise.all([
-        http.get('/classes'),
-        http.get('/students', { params: { page: nextPage, search: nextQuery } }),
-        http.get('/analytics')
-      ]);
-      setClasses(classRes.data);
-      setStudents(studentRes.data.data);
-      setPages(studentRes.data.pages);
-      setAnalytics(analyticsRes.data);
+      await loadClasses();
+    } catch (error) {
+      toast.error(error.userMessage || 'Failed to load dashboard');
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    load().catch((error) => toast.error(error.userMessage || 'Failed to load dashboard'));
-  }, [page]);
+    loadAll();
+  }, []);
+
+  useEffect(() => {
+    loadStudents().catch((error) => toast.error(error.userMessage || 'Failed to load students'));
+  }, [selectedClassId]);
 
   async function submitClass(values) {
     try {
@@ -61,25 +88,9 @@ export default function Dashboard() {
         toast.success('Class created');
       }
       setClassEdit(null);
-      await load();
+      await loadClasses();
     } catch (error) {
       toast.error(error.userMessage || 'Class save failed');
-    }
-  }
-
-  async function submitStudent(values) {
-    try {
-      if (studentEdit) {
-        await http.put(`/students/${studentEdit._id}`, values);
-        toast.success('Student updated');
-      } else {
-        await http.post('/students', values);
-        toast.success('Student added');
-      }
-      setStudentEdit(null);
-      await load();
-    } catch (error) {
-      toast.error(error.userMessage || 'Student save failed');
     }
   }
 
@@ -87,11 +98,32 @@ export default function Dashboard() {
     try {
       await http.delete(`/classes/${item._id}`);
       toast.success('Class deleted');
-      await load();
+      setConfirm(null);
+      if (selectedClassId === item._id) {
+        setSelectedClassId('');
+        setSelectedStudent(null);
+      }
+      await loadClasses();
     } catch (error) {
       toast.error(error.userMessage || 'Delete failed');
-    } finally {
-      setConfirm(null);
+    }
+  }
+
+  async function submitStudent(values) {
+    try {
+      const payload = { ...values, classRoom: selectedClassId };
+      if (studentEdit) {
+        await http.put(`/students/${studentEdit._id}`, payload);
+        toast.success('Student updated');
+      } else {
+        await http.post('/students', payload);
+        toast.success('Student added');
+      }
+      setStudentEdit(null);
+      setShowStudentForm(false);
+      await Promise.all([loadStudents(), loadClasses()]);
+    } catch (error) {
+      toast.error(error.userMessage || 'Student save failed');
     }
   }
 
@@ -99,152 +131,177 @@ export default function Dashboard() {
     try {
       await http.delete(`/students/${item._id}`);
       toast.success('Student deleted');
-      await load();
+      setConfirm(null);
+      if (selectedStudent?._id === item._id) setSelectedStudent(null);
+      await Promise.all([loadStudents(), loadClasses()]);
     } catch (error) {
       toast.error(error.userMessage || 'Delete failed');
-    } finally {
-      setConfirm(null);
     }
   }
 
-  async function certificate(student) {
+  async function submitNote(values) {
+    if (!selectedStudent) return;
     try {
-      const response = await http.get(`/students/${student._id}/certificate`, { responseType: 'blob' });
-      const url = URL.createObjectURL(response.data);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${student.fullName.replace(/\s+/g, '_')}_certificate.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-      toast.success('Certificate downloaded');
-      await load();
+      if (noteEdit) {
+        const { data } = await http.put(`/students/${selectedStudent._id}/notes/${noteEdit._id}`, values);
+        setSelectedStudent(data);
+        toast.success('Note updated');
+      } else {
+        const { data } = await http.post(`/students/${selectedStudent._id}/notes`, values);
+        setSelectedStudent(data);
+        toast.success('Note added');
+      }
+      setNoteEdit(null);
+      await Promise.all([loadStudents(), loadClasses()]);
     } catch (error) {
-      toast.error(error.userMessage || 'Certificate download failed');
+      toast.error(error.userMessage || 'Note save failed');
     }
   }
 
-  async function exportExcel() {
+  async function deleteNote(note) {
+    if (!selectedStudent) return;
     try {
-      const response = await http.get('/students/export/excel', { responseType: 'blob' });
-      const url = URL.createObjectURL(response.data);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'students.xlsx';
-      link.click();
-      URL.revokeObjectURL(url);
+      const { data } = await http.delete(`/students/${selectedStudent._id}/notes/${note._id}`);
+      setSelectedStudent(data);
+      toast.success('Note deleted');
+      await Promise.all([loadStudents(), loadClasses()]);
     } catch (error) {
-      toast.error(error.userMessage || 'Export failed');
+      toast.error(error.userMessage || 'Delete failed');
     }
   }
 
-  async function importExcel(event) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      const form = new FormData();
-      form.append('file', file);
-      const { data } = await http.post('/students/import/excel', form);
-      toast.success(`Imported ${data.created} students`);
-      await load();
-    } catch (error) {
-      toast.error(error.userMessage || 'Import failed');
-    } finally {
-      event.target.value = '';
+  function startAddStudent() {
+    if (!selectedClassId) {
+      toast.info('Create or select a class first');
+      return;
     }
+    setStudentEdit(null);
+    setShowStudentForm(true);
   }
-
-  const bestStudent = useMemo(() => analytics.bestStudent?.fullName || 'No students yet', [analytics]);
 
   return (
-    <main className="dashboard">
-      <aside className="sidebar">
-        <div className="logo">GS</div>
-        <nav>
-          <a href="#overview">Overview</a>
-          <a href="#classes">Classes</a>
-          <a href="#students">Students</a>
-          <a href="#reports">Reports</a>
-        </nav>
-      </aside>
-      <section className="workspace">
-        <header className="topbar">
-          <div>
-            <span className="eyebrow">Admin Dashboard</span>
-            <h1>School Management</h1>
-            <p>{admin?.name} · role-ready access layer</p>
-          </div>
-          <div className="topActions">
-            <ThemeToggle dark={dark} onToggle={() => setDark(!dark)} />
-            <button className="btn ghost" onClick={logout}><LogOut size={16} /> Logout</button>
-          </div>
-        </header>
-
-        <section id="overview" className="statsGrid">
-          <StatCard label="Total Classes" value={analytics.totalClasses} />
-          <StatCard label="Total Groups" value={analytics.totalGroups} tone="blue" />
-          <StatCard label="Total Students" value={analytics.totalStudents} tone="violet" />
-          <StatCard label="Average Score" value={analytics.averageSchoolScore} tone="amber" />
-          <StatCard label="Best Student" value={bestStudent} tone="rose" />
-          <StatCard label="Certificates" value={analytics.certificatesGenerated} tone="green" />
-        </section>
-
-        <div className="gridTwo">
-          <section id="classes" className="panel">
-            <div className="panelHead">
-              <h2>Class Management</h2>
-              <span>{classes.length} records</span>
-            </div>
-            <ClassForm editing={classEdit} onSubmit={submitClass} onCancel={() => setClassEdit(null)} />
-            <div className="miniList">
-              {classes.map((item) => (
-                <div key={item._id} className="miniItem">
-                  <strong>{item.className}</strong>
-                  <span>{item.groupNumber}</span>
-                  <button className="btn tiny" onClick={() => setClassEdit(item)}>Edit</button>
-                  <button className="btn tiny danger" onClick={() => setConfirm({ type: 'class', item })}>Delete</button>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="panel">
-            <div className="panelHead">
-              <h2>Student Form</h2>
-              <span>4 exams auto-average</span>
-            </div>
-            <StudentForm classes={classes} editing={studentEdit} onSubmit={submitStudent} onCancel={() => setStudentEdit(null)} />
-          </section>
+    <main className="dashboard simple">
+      <header className="appHeader">
+        <div>
+          <span className="eyebrow">EGIM Admin</span>
+          <h1>Classes and Student Notes</h1>
+          <p>{admin?.name || admin?.email}</p>
         </div>
+        <button className="btn ghost" onClick={logout}><LogOut size={16} /> Logout</button>
+      </header>
 
-        <section id="students" className="panel">
+      <section className="statsGrid">
+        <StatCard label="Total Classes" value={analytics.totalClasses} />
+        <StatCard label="Total Students" value={analytics.totalStudents} tone="blue" />
+        <StatCard label="Average Grade" value={analytics.averageGrade ?? 0} tone="amber" />
+        <StatCard label="Recent Students" value={analytics.recentStudents?.length || 0} tone="green" />
+      </section>
+
+      <section className="dashboardGrid">
+        <aside className="panel classPanel">
+          <div className="panelHead">
+            <div>
+              <h2>Classes</h2>
+              <span>{loading ? 'Loading...' : `${classes.length} total`}</span>
+            </div>
+          </div>
+          <ClassForm editing={classEdit} onSubmit={submitClass} onCancel={() => setClassEdit(null)} />
+          <div className="classList">
+            {classes.map((item) => (
+              <button
+                key={item._id}
+                className={`classItem ${selectedClassId === item._id ? 'active' : ''}`}
+                onClick={() => { setSelectedClassId(item._id); setSelectedStudent(null); }}
+              >
+                <span>
+                  <strong>{item.className}</strong>
+                  <small>{item.studentCount || 0} students</small>
+                </span>
+                <span className="classActions">
+                  <span className="miniBtn" onClick={(event) => { event.stopPropagation(); setClassEdit(item); }}>Edit</span>
+                  <span className="miniBtn danger" onClick={(event) => { event.stopPropagation(); setConfirm({ type: 'class', item }); }}>Delete</span>
+                </span>
+              </button>
+            ))}
+            {!classes.length && <p className="emptyState">No classes yet. Create your first class.</p>}
+          </div>
+        </aside>
+
+        <section className="panel studentsPanel">
           <div className="panelHead wrap">
             <div>
-              <h2>Student Results</h2>
-              <span>{loading ? 'Loading...' : `${students.length} visible rows`}</span>
+              <h2>{selectedClass ? `Class: ${selectedClass.className}` : 'Students'}</h2>
+              <span>{students.length ? `${students.length} students` : 'No students yet.'}</span>
             </div>
             <div className="toolbar">
-              <form className="inlineSearch" onSubmit={(e) => { e.preventDefault(); setPage(1); load(1, query); }}>
+              <form className="inlineSearch" onSubmit={(event) => { event.preventDefault(); loadStudents(selectedClassId, query); }}>
                 <Search size={16} />
-                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Global search" />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search student" />
               </form>
-              <button className="btn secondary" onClick={exportExcel}><Download size={16} /> Excel</button>
-              <button className="btn secondary" onClick={() => fileRef.current.click()}><Upload size={16} /> Import</button>
-              <input ref={fileRef} hidden type="file" accept=".xlsx,.xls" onChange={importExcel} />
+              <button className="btn primary" onClick={startAddStudent}><Plus size={16} /> Add Student</button>
             </div>
           </div>
-          <StudentTable students={students} onEdit={setStudentEdit} onDelete={(item) => setConfirm({ type: 'student', item })} onCertificate={certificate} />
-          <div className="pagination">
-            <button className="btn ghost" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
-            <span>Page {page} of {pages}</span>
-            <button className="btn ghost" disabled={page >= pages} onClick={() => setPage(page + 1)}>Next</button>
-          </div>
+
+          {showStudentForm && (
+            <div className="subPanel">
+              <StudentForm
+                editing={studentEdit}
+                onSubmit={submitStudent}
+                onCancel={() => { setStudentEdit(null); setShowStudentForm(false); }}
+              />
+            </div>
+          )}
+
+          <StudentTable
+            students={students}
+            onView={setSelectedStudent}
+            onEdit={(student) => { setStudentEdit(student); setShowStudentForm(true); }}
+            onDelete={(student) => setConfirm({ type: 'student', item: student })}
+          />
         </section>
+      </section>
+
+      <section className="panel detailPanel">
+        {selectedStudent ? (
+          <>
+            <div className="panelHead wrap">
+              <div>
+                <h2>{studentName(selectedStudent)}</h2>
+                <span>Average: {Number(selectedStudent.finalNote || 0).toFixed(2)}</span>
+              </div>
+              <button className="btn danger" onClick={() => setConfirm({ type: 'student', item: selectedStudent })}><Trash2 size={16} /> Delete Student</button>
+            </div>
+            {selectedStudent.comments && <p className="studentComment">{selectedStudent.comments}</p>}
+            <div className="notesLayout">
+              <div className="notesList">
+                {(selectedStudent.notes || []).map((note) => (
+                  <div className="noteItem" key={note._id}>
+                    <span>
+                      <strong>{note.subject}</strong>
+                      {note.comment && <small>{note.comment}</small>}
+                    </span>
+                    <strong>{Number(note.grade).toFixed(2)}</strong>
+                    <button className="btn tiny" onClick={() => setNoteEdit(note)}>Edit</button>
+                    <button className="btn tiny danger" onClick={() => deleteNote(note)}>Delete</button>
+                  </div>
+                ))}
+                {!selectedStudent.notes?.length && <p className="emptyState">No notes yet.</p>}
+              </div>
+              <div className="subPanel">
+                <h3>{noteEdit ? 'Edit Note' : 'Add Note'}</h3>
+                <NoteForm editing={noteEdit} onSubmit={submitNote} onCancel={() => setNoteEdit(null)} />
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className="emptyState">Select a student to view notes.</p>
+        )}
       </section>
 
       <ConfirmModal
         open={Boolean(confirm)}
         title="Confirm deletion"
-        message={`Delete ${confirm?.item?.fullName || confirm?.item?.className || 'this record'}?`}
+        message={`Delete ${studentName(confirm?.item) || confirm?.item?.className || 'this record'}?`}
         onCancel={() => setConfirm(null)}
         onConfirm={() => confirm?.type === 'class' ? deleteClass(confirm.item) : deleteStudent(confirm.item)}
       />

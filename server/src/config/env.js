@@ -91,7 +91,7 @@ export const env = {
   JWT_EXPIRES_IN: getEnv('JWT_EXPIRES_IN', '7d'),
   MONGO_URI: getMongoUri(),
   NODE_ENV: getEnv('NODE_ENV', 'development'),
-  PORT: getEnv('PORT', '5001'),
+  PORT: getEnv('PORT', '5000'),
   SCHOOL_NAME: getEnv('SCHOOL_NAME', 'German School'),
   VERCEL_BRANCH_URL: getEnv('VERCEL_BRANCH_URL'),
   VERCEL_URL: getEnv('VERCEL_URL')

@@ -3,21 +3,17 @@ import Student from '../models/Student.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 export const analytics = asyncHandler(async (req, res) => {
-  const [totalClasses, totalStudents, bestStudent, averageResult, certificateResult, groups] = await Promise.all([
+  const [totalClasses, totalStudents, averageResult, recentStudents] = await Promise.all([
     ClassRoom.countDocuments(),
     Student.countDocuments(),
-    Student.findOne().sort({ finalNote: -1, fullName: 1 }),
     Student.aggregate([{ $group: { _id: null, score: { $avg: '$finalNote' } } }]),
-    Student.aggregate([{ $group: { _id: null, certificates: { $sum: '$certificatesGenerated' } } }]),
-    ClassRoom.distinct('groupNumber')
+    Student.find().sort({ createdAt: -1 }).limit(5).select('firstName lastName fullName className finalNote createdAt studentNumber')
   ]);
 
   res.json({
     totalClasses,
-    totalGroups: groups.length,
     totalStudents,
-    averageSchoolScore: Number((averageResult[0]?.score || 0).toFixed(2)),
-    bestStudent,
-    certificatesGenerated: certificateResult[0]?.certificates || 0
+    averageGrade: Number((averageResult[0]?.score || 0).toFixed(2)),
+    recentStudents
   });
 });

@@ -3,11 +3,8 @@ import express from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
-import mongoose from 'mongoose';
 import { corsOptions } from './config/cors.js';
 import { getDatabaseStatus } from './config/db.js';
-import { getEnv, getMongoUri } from './config/env.js';
-import Admin from './models/Admin.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import classRoutes from './routes/classRoutes.js';
@@ -45,20 +42,6 @@ app.get('/api/health', (req, res) => {
     service: 'Sprach Prüfung API',
     database: getDatabaseStatus(),
     timestamp: new Date().toISOString()
-  });
-});
-
-app.get('/api/health/auth', (req, res) => {
-  const mongoReadyState = mongoose.connection.readyState;
-  res.json({
-    success: true,
-    databaseConnected: mongoReadyState === 1,
-    mongoReadyState,
-    jwtSecretConfigured: Boolean(getEnv('JWT_SECRET')),
-    mongoUriConfigured: Boolean(getMongoUri()),
-    mongoUriPrimaryConfigured: Boolean(getEnv('MONGO_URI')),
-    mongoUriAliasConfigured: Boolean(getEnv('MONGODB_URI')),
-    userCollection: Admin.collection.name
   });
 });
 

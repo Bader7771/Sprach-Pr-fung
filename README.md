@@ -1,188 +1,126 @@
-# School Management System
+# Sprach Prufung / EGIM School Management
 
-Full-stack school management app built with React, React Router, Axios, React Hook Form, Tailwind-enabled native CSS, Node.js, Express, MongoDB, Mongoose, JWT, PDFKit, and ExcelJS.
+Full-stack admin application for EGIM class management. The app uses React, Express, MongoDB, Mongoose, and JWT authentication.
 
-## Features
+## Current Workflow
 
-- Admin JWT login, protected dashboard, logout
-- Class/group CRUD
-- Student CRUD with four exam notes and automatic final-note average
-- Public student result portal with class, group, and name filters
-- Dashboard analytics: classes, groups, students, average score, best student, certificates generated
-- Professional A4 PDF certificate download per student
-- Excel export, Excel import, bulk upload
-- Pagination, global search, toast notifications, confirmation modal
-- Dark/light mode and responsive dashboard UI
-- Role-ready admin model and audit logs
+- Admin login
+- Create, edit, and delete classes
+- Add, edit, delete, search, and sort students inside a class
+- Add, edit, and delete student notes by subject
+- Automatic average calculation per student
+- Dashboard cards for total classes, total students, average grade, and recent students
 
-## Folder Structure
+There are no groups, demo records, public result pages, certificate generation, or Excel import/export features in the current workflow.
+
+## Project Structure
 
 ```text
-client/
-  src/api/http.js
-  src/components/
-  src/context/AuthContext.jsx
-  src/pages/
-  src/styles/app.css
-server/
-  api/index.js
-  vercel.json
-  src/config/db.js
-  src/controllers/
-  src/middleware/
-  src/models/
-  src/routes/
-  src/seed/seed.js
-  src/services/
+client/  React frontend
+server/  Express API and MongoDB models
 ```
 
-## MongoDB Collections
-
-- `admins`: admin users with hashed passwords and roles
-- `classrooms`: class name and group number records
-- `students`: student profile, class/group snapshot, exam notes, final note, certificate count
-- `results`: normalized result document per student
-- `auditlogs`: create/update/delete/import/certificate events
-
-## Setup
-
-1. Install dependencies:
-
-```bash
-npm run install:all
-```
-
-2. Create environment files:
-
-```bash
-cp server/.env.example server/.env
-cp client/.env.example client/.env
-```
-
-3. Start MongoDB locally or set `MONGO_URI` in `server/.env`. The production URI must include `/school_management` after the host.
-
-4. Seed sample data. Set `SEED_ADMIN_PASSWORD` in `server/.env` first if the sample admin does not already exist:
-
-```bash
-npm run seed
-```
-
-Sample admin email:
-
-```text
-email: admin@school.com
-```
-
-5. Run both apps:
-
-```bash
-npm run dev
-```
-
-- Frontend: `http://localhost:3000`
-- Backend API: set with `REACT_APP_API_URL`
-
-## REST API
-
-### Auth
-
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-
-Login request body:
-
-```json
-{
-  "email": "admin@example.com",
-  "password": "your-password"
-}
-```
-
-Successful login returns `success`, `token`, and `user`.
-
-### Classes
-
-- `GET /api/classes`
-- `POST /api/classes`
-- `PUT /api/classes/:id`
-- `DELETE /api/classes/:id`
-
-### Students and Results
-
-- `GET /api/students`
-- `GET /api/students/public`
-- `POST /api/students`
-- `PUT /api/students/:id`
-- `DELETE /api/students/:id`
-- `GET /api/students/:id/certificate`
-- `GET /api/students/export/excel`
-- `POST /api/students/import/excel`
-
-### Analytics
-
-- `GET /api/analytics`
-
-## Excel Import Format
-
-Use the first worksheet with this header order:
-
-```text
-Full Name | Class Name | Group Number | Exam 1 | Exam 2 | Exam 3 | Exam 4
-```
-
-The importer creates missing class/group records automatically.
-
-## Environment Variables
+## Environment
 
 Backend `server/.env`:
 
-```text
+```env
 MONGO_URI=mongodb+srv://username:password@cluster.example.mongodb.net/school_management
 JWT_SECRET=replace_with_a_long_random_secret
-CLIENT_URL=https://sprach-pr-fung-client.vercel.app
-ALLOWED_ORIGINS=https://sprach-pr-fung-client.vercel.app,http://localhost:3000,http://localhost:5173
+CLIENT_URL=http://localhost:3000
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,https://sprach-pr-fung-client.vercel.app
 NODE_ENV=development
-PORT=5001
-SEED_ADMIN_EMAIL=admin@school.com
-SEED_ADMIN_PASSWORD=replace_with_a_temporary_local_seed_password
+PORT=5000
+JWT_EXPIRES_IN=7d
 ```
 
 Frontend `client/.env`:
 
-```text
-REACT_APP_API_URL=https://sprach-pr-fung-server.vercel.app
+```env
+REACT_APP_API_URL=http://localhost:5000
 ```
 
-This is a Create React App frontend, so production builds use `REACT_APP_API_URL`. The value should be the backend origin only; the Axios client appends `/api`.
+For production, set `REACT_APP_API_URL=https://sprach-pr-fung-server.vercel.app`.
 
-## Health Checks
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+The frontend runs on `http://localhost:3000` and the backend on `http://localhost:5000`.
+
+## Admin Account
+
+Create or update the EGIM admin manually:
+
+```bash
+ADMIN_EMAIL=Bilaladmin@egim.ma ADMIN_PASSWORD='your_password_here' npm run seed:admin --prefix server
+```
+
+To update an existing admin password/profile, add:
+
+```bash
+OVERWRITE_ADMIN=true
+```
+
+The seed scripts hash passwords with bcryptjs and never run automatically during deployment.
+
+## API Routes
+
+All routes except auth and health require `Authorization: Bearer <token>`.
 
 - `GET /`
 - `GET /api/health`
-- `GET /api/health/auth`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `GET /api/classes`
+- `POST /api/classes`
+- `PUT /api/classes/:id`
+- `DELETE /api/classes/:id`
+- `GET /api/students`
+- `POST /api/students`
+- `GET /api/students/:id`
+- `PUT /api/students/:id`
+- `DELETE /api/students/:id`
+- `POST /api/students/:id/notes`
+- `PUT /api/students/:id/notes/:noteId`
+- `DELETE /api/students/:id/notes/:noteId`
+- `GET /api/analytics`
 
-The backend returns JSON for unknown routes, including unknown `/api/*` routes.
-`/api/health/auth` is a temporary safe diagnostic endpoint for auth deployment checks; it does not expose secrets or user data.
+## Legacy Data Migration
+
+If the database contains older class/group or fixed-exam records, run the migration manually after backing up MongoDB:
+
+```bash
+npm run migrate:egim --prefix server
+```
+
+The migration:
+
+- splits legacy `fullName` into first and last name where needed
+- converts legacy `exam1` to `exam4` values into note records if the student has no notes
+- removes obsolete `groupNumber` fields from class and student documents
+- removes obsolete certificate counters from student documents
+
+It does not delete students, classes, admins, or production data.
+
+## MongoDB Atlas Notes
+
+The production URI must select the `school_management` database before query parameters:
+
+```text
+mongodb+srv://username:password@cluster.example.mongodb.net/school_management?retryWrites=true&w=majority
+```
+
+Atlas Network Access must allow Vercel to connect. `0.0.0.0/0` is common for Vercel serverless deployments, but it allows connections from any IP, so keep strong database credentials and least-privilege permissions. URL-encode special characters in the password.
 
 ## Deployment
 
-Deploy the same repository as two Vercel projects:
+Deploy as two separate Vercel projects:
 
-- Frontend Root Directory: `client`
-- Backend Root Directory: `server`
+- Frontend root directory: `client`
+- Backend root directory: `server`
 
-See [deployment.md](./deployment.md) for exact Vercel settings, MongoDB Atlas notes, and troubleshooting steps.
-
-## Safe Seeding
-
-`npm run seed` is non-destructive by default. It creates the sample admin and sample data only when missing. To create a missing admin, set `SEED_ADMIN_PASSWORD` in `server/.env` or in your shell for that one seed run.
-
-For local development only, use `RESET_SEED_DATA=true npm run seed` to reset sample data. The seed script blocks this reset in production.
-
-To create one admin explicitly without seeding sample students:
-
-```bash
-ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=replace_with_a_strong_password npm run seed:admin --prefix server
-```
-
-Set `OVERWRITE_ADMIN=true` only when you intentionally want to replace an existing admin password.
+See `deployment.md` for the exact Vercel settings.

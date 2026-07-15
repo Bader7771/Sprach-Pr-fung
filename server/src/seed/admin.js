@@ -5,7 +5,7 @@ import Admin from '../models/Admin.js';
 async function run() {
   validateEnv();
 
-  const email = process.env.ADMIN_EMAIL || process.env.SEED_ADMIN_EMAIL;
+  const email = process.env.ADMIN_EMAIL || process.env.SEED_ADMIN_EMAIL || 'Bilaladmin@egim.ma';
   const password = process.env.ADMIN_PASSWORD || process.env.SEED_ADMIN_PASSWORD;
   const name = process.env.ADMIN_NAME || 'School Admin';
   const role = process.env.ADMIN_ROLE || 'admin';
