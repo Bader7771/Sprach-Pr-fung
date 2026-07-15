@@ -59,7 +59,7 @@ cp server/.env.example server/.env
 cp client/.env.example client/.env
 ```
 
-3. Start MongoDB locally or set `MONGO_URI` in `server/.env`. The URI must include a database name after the host.
+3. Start MongoDB locally or set `MONGO_URI` in `server/.env`. The production URI must include `/school_management` after the host.
 
 4. Seed sample data. Set `SEED_ADMIN_PASSWORD` in `server/.env` first if the sample admin does not already exist:
 
@@ -126,7 +126,7 @@ The importer creates missing class/group records automatically.
 Backend `server/.env`:
 
 ```text
-MONGO_URI=mongodb+srv://username:password@cluster.example.mongodb.net/sprach_prufung
+MONGO_URI=mongodb+srv://username:password@cluster.example.mongodb.net/school_management
 JWT_SECRET=replace_with_a_long_random_secret
 CLIENT_URL=https://sprach-pr-fung-client.vercel.app
 ALLOWED_ORIGINS=https://sprach-pr-fung-client.vercel.app,http://localhost:3000,http://localhost:5173

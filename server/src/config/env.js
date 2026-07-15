@@ -1,5 +1,9 @@
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(currentDir, '../../.env') });
 dotenv.config();
 
 const REQUIRED_ENV_VARS = ['MONGO_URI', 'JWT_SECRET'];
@@ -76,7 +80,7 @@ export function validateEnv(requiredEnvVars = REQUIRED_ENV_VARS) {
   }
 
   if (mongoUri && !hasMongoDatabaseName(mongoUri)) {
-    throw new Error('MONGO_URI must include a database name after the host, for example mongodb+srv://.../sprach_prufung?retryWrites=true&w=majority');
+    throw new Error('MONGO_URI must include a database name after the host, for example mongodb+srv://.../school_management?retryWrites=true&w=majority');
   }
 }
 

@@ -24,8 +24,12 @@ router
   .post(validateLoginInput, requireDatabase, login)
   .all((req, res) => {
     res.setHeader('Allow', 'POST');
-    res.status(405).json({ message: 'Method not allowed. Use POST /api/auth/login.' });
+    res.status(405).json({
+      success: false,
+      message: 'Method not allowed',
+      allowedMethods: ['POST']
+    });
   });
-router.get('/me', requireDatabase, protect, me);
+router.get('/me', protect, me);
 
 export default router;

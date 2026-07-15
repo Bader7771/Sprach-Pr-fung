@@ -20,7 +20,7 @@ Import the GitHub repository into Vercel and use these settings:
 Add these Vercel environment variables:
 
 ```text
-MONGO_URI=mongodb+srv://username:password@cluster.example.mongodb.net/sprach_prufung
+MONGO_URI=mongodb+srv://username:password@cluster.example.mongodb.net/school_management
 JWT_SECRET=replace_with_a_long_random_secret
 CLIENT_URL=https://sprach-pr-fung-client.vercel.app
 ALLOWED_ORIGINS=https://sprach-pr-fung-client.vercel.app,http://localhost:3000,http://localhost:5173
@@ -58,7 +58,7 @@ After deployment, open the browser Network tab and confirm API requests target `
 
 Use MongoDB Atlas with the existing `MONGO_URI` variable.
 
-- The URI must include a database name, for example `/sprach_prufung`.
+- The URI must include the production database name: `/school_management`.
 - Special characters in the database password must be URL encoded.
 - The database user must have read/write permissions for the target database.
 - Atlas Network Access must allow Vercel serverless functions to connect. The common quick option is `0.0.0.0/0`, which allows connections from any IP address; use it only with strong database credentials and least-privilege users, or replace it with a tighter access strategy if your hosting/network setup supports one.

@@ -12,6 +12,7 @@ export function errorHandler(err, req, res, next) {
   const isProduction = env.NODE_ENV === 'production';
   const isValidationError = err.name === 'ZodError' || err.name === 'ValidationError' || err.name === 'CastError';
   const isConfigError = err.message?.startsWith('Missing required environment variable');
+  const isDatabaseConnectionError = err.name === 'MongooseServerSelectionError' || err.name === 'MongoServerSelectionError';
   const responseStatus = isValidationError ? 400 : statusCode;
 
   console.error('Request failed', {
@@ -25,9 +26,11 @@ export function errorHandler(err, req, res, next) {
     success: false,
     message: isConfigError
       ? 'Server configuration error'
-      : isProduction && responseStatus >= 500
-        ? 'Server error'
-        : err.message || 'Server error',
+      : isDatabaseConnectionError
+        ? 'Database unavailable'
+        : isProduction && responseStatus >= 500
+          ? 'Server error'
+          : err.message || 'Server error',
     details: isProduction ? undefined : err.stack
   });
 }

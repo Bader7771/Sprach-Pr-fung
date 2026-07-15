@@ -1,10 +1,17 @@
 import axios from 'axios';
 
 const PRODUCTION_API_ORIGIN = 'https://sprach-pr-fung-server.vercel.app';
-const LOCAL_API_ORIGIN = 'http://localhost:5001';
+
+function getDefaultApiOrigin() {
+  if (process.env.NODE_ENV === 'production') {
+    return PRODUCTION_API_ORIGIN;
+  }
+
+  return `${window.location.protocol}//${window.location.hostname}:5001`;
+}
 
 function normalizeApiOrigin(value) {
-  const fallback = process.env.NODE_ENV === 'production' ? PRODUCTION_API_ORIGIN : LOCAL_API_ORIGIN;
+  const fallback = getDefaultApiOrigin();
   const raw = String(value || '').trim();
 
   if (!raw || raw === 'undefined' || raw === 'null') {
