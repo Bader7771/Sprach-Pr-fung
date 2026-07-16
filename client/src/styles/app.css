@@ -93,6 +93,20 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .authPanel h1, .appHeader h1 { margin: 14px 0 6px; line-height: 1.05; }
 .authPanel p, .appHeader p { margin: 0 0 22px; color: var(--muted); }
 .authPanel form { display: grid; gap: 16px; margin: 22px 0; }
+.authBackLink {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 13px;
+}
+.authBackLink:focus-visible {
+  outline: 3px solid rgba(29, 78, 216, 0.18);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
 
 label { display: grid; gap: 7px; color: var(--muted); font-size: 13px; font-weight: 800; }
 input, select, textarea {
@@ -464,6 +478,7 @@ tr:last-child td { border-bottom: 0; }
   letter-spacing: 0.08em;
   font-size: 15px;
   min-width: 0;
+  animation: navItemIn 620ms cubic-bezier(.19, 1, .22, 1) 140ms both;
 }
 
 .landingMenu {
@@ -488,7 +503,15 @@ tr:last-child td { border-bottom: 0; }
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  animation: navItemIn 520ms cubic-bezier(.19, 1, .22, 1) both;
 }
+
+.landingLinks button:nth-child(1) { animation-delay: 260ms; }
+.landingLinks button:nth-child(2) { animation-delay: 310ms; }
+.landingLinks button:nth-child(3) { animation-delay: 360ms; }
+.landingLinks button:nth-child(4) { animation-delay: 410ms; }
+.landingLinks button:nth-child(5) { animation-delay: 460ms; }
+.landingLinks button:nth-child(6) { animation-delay: 510ms; }
 
 .landingLinks button::after {
   content: "";
@@ -558,6 +581,7 @@ tr:last-child td { border-bottom: 0; }
   color: #102752;
   font-size: 13px;
   font-weight: 700;
+  animation: navItemIn 560ms cubic-bezier(.19, 1, .22, 1) 620ms both;
   transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, color 220ms ease;
 }
 
@@ -801,9 +825,6 @@ button.heroAction {
   padding: clamp(20px, 2.6vw, 30px);
   background: rgba(255, 255, 255, 0.04);
   color: #fff8ea;
-  animation: fadeUp linear both;
-  animation-timeline: view();
-  animation-range: entry 0% cover 32%;
 }
 
 .landingBand span {
@@ -848,9 +869,6 @@ button.heroAction {
   height: 1px;
   background: linear-gradient(90deg, #c49c50, transparent);
   transform-origin: left;
-  animation: lineReveal linear both;
-  animation-timeline: view();
-  animation-range: entry 8% cover 34%;
 }
 
 .sectionNumber {
@@ -1124,13 +1142,77 @@ button.heroAction {
 }
 
 .revealBlock {
-  animation: fadeUp linear both;
-  animation-timeline: view();
-  animation-range: entry 0% cover 32%;
+  --reveal-distance: 22px;
 }
+
+.revealBlock::before {
+  transform: scaleX(0);
+}
+
+.revealBlock.isVisible::before {
+  animation: lineReveal 900ms cubic-bezier(.19, 1, .22, 1) both;
+}
+
+.revealBlock .sectionNumber,
+.revealBlock .sectionKicker,
+.revealBlock .sectionCopy h2,
+.revealBlock .sectionCopy p,
+.revealBlock .typographicPanel,
+.revealBlock .classEditorialItem,
+.revealBlock .landingState,
+.revealBlock .examRules article,
+.revealBlock .resultsHead,
+.revealBlock .resultsSurface,
+.revealBlock .contactAdminLink,
+.landingBand.revealBlock article {
+  opacity: 0;
+  transform: translateY(var(--reveal-distance));
+}
+
+.revealBlock.isVisible .sectionNumber,
+.revealBlock.isVisible .sectionKicker,
+.revealBlock.isVisible .sectionCopy h2,
+.revealBlock.isVisible .sectionCopy p,
+.revealBlock.isVisible .typographicPanel,
+.revealBlock.isVisible .classEditorialItem,
+.revealBlock.isVisible .landingState,
+.revealBlock.isVisible .examRules article,
+.revealBlock.isVisible .resultsHead,
+.revealBlock.isVisible .resultsSurface,
+.revealBlock.isVisible .contactAdminLink,
+.landingBand.revealBlock.isVisible article {
+  animation: sectionReveal 820ms cubic-bezier(.19, 1, .22, 1) both;
+}
+
+.revealBlock.isVisible .sectionNumber { animation-delay: 80ms; }
+.revealBlock.isVisible .sectionKicker { animation-delay: 140ms; }
+.revealBlock.isVisible .sectionCopy h2 { animation-delay: 200ms; }
+.revealBlock.isVisible .sectionCopy p:nth-of-type(1) { animation-delay: 300ms; }
+.revealBlock.isVisible .sectionCopy p:nth-of-type(2) { animation-delay: 390ms; }
+.revealBlock.isVisible .typographicPanel,
+.revealBlock.isVisible .resultsHead,
+.revealBlock.isVisible .contactAdminLink { animation-delay: 360ms; }
+.revealBlock.isVisible .resultsSurface { animation-delay: 480ms; }
+.revealBlock.isVisible .classEditorialItem:nth-child(1),
+.landingBand.revealBlock.isVisible article:nth-child(1),
+.revealBlock.isVisible .examRules article:nth-child(1) { animation-delay: 360ms; }
+.revealBlock.isVisible .classEditorialItem:nth-child(2),
+.landingBand.revealBlock.isVisible article:nth-child(2),
+.revealBlock.isVisible .examRules article:nth-child(2) { animation-delay: 440ms; }
+.revealBlock.isVisible .classEditorialItem:nth-child(3),
+.landingBand.revealBlock.isVisible article:nth-child(3),
+.revealBlock.isVisible .examRules article:nth-child(3) { animation-delay: 520ms; }
+.revealBlock.isVisible .classEditorialItem:nth-child(4),
+.revealBlock.isVisible .examRules article:nth-child(4) { animation-delay: 600ms; }
+.revealBlock.isVisible .landingState { animation-delay: 360ms; }
 
 @keyframes navDrop {
   from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes navItemIn {
+  from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -1170,6 +1252,11 @@ button.heroAction {
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sectionReveal {
+  from { opacity: 0; transform: translateY(var(--reveal-distance)); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -1297,17 +1384,26 @@ button.heroAction {
     top: 72px;
     left: 12px;
     right: 12px;
-    display: none;
+    display: grid;
+    gap: 16px;
     padding: 18px;
     border: 1px solid rgba(17, 28, 48, 0.12);
     border-radius: 8px;
     background: rgba(255, 250, 240, 0.96);
     box-shadow: 0 22px 60px rgba(16, 32, 58, 0.14);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    visibility: hidden;
+    transition: opacity 180ms ease, transform 220ms cubic-bezier(.19, 1, .22, 1), visibility 0ms linear 220ms;
   }
 
   .landingMenu.isOpen {
-    display: grid;
-    gap: 16px;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    visibility: visible;
+    transition-delay: 0ms;
   }
 
   .landingLinks {
@@ -1320,6 +1416,28 @@ button.heroAction {
     min-height: 38px;
     text-align: left;
   }
+
+  .landingMenu .landingLinks button,
+  .landingMenu .adminLink {
+    opacity: 0;
+    transform: translateY(6px);
+    animation: none;
+    transition: opacity 180ms ease, transform 220ms cubic-bezier(.19, 1, .22, 1);
+  }
+
+  .landingMenu.isOpen .landingLinks button,
+  .landingMenu.isOpen .adminLink {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .landingMenu.isOpen .landingLinks button:nth-child(1) { transition-delay: 40ms; }
+  .landingMenu.isOpen .landingLinks button:nth-child(2) { transition-delay: 75ms; }
+  .landingMenu.isOpen .landingLinks button:nth-child(3) { transition-delay: 110ms; }
+  .landingMenu.isOpen .landingLinks button:nth-child(4) { transition-delay: 145ms; }
+  .landingMenu.isOpen .landingLinks button:nth-child(5) { transition-delay: 180ms; }
+  .landingMenu.isOpen .landingLinks button:nth-child(6) { transition-delay: 215ms; }
+  .landingMenu.isOpen .adminLink { transition-delay: 250ms; }
 
   .adminLink {
     position: static;

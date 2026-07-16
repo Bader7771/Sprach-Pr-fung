@@ -1,7 +1,7 @@
-import { GraduationCap } from 'lucide-react';
+import { ArrowLeft, GraduationCap } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getErrorMessage } from '../api/http.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -36,6 +36,10 @@ export default function Login() {
           <label>Password<input type="password" autoComplete="current-password" {...register('password', { required: true })} /></label>
           <button className="btn primary full" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</button>
         </form>
+        <Link className="authBackLink" to="/" aria-label="Back to Home">
+          <ArrowLeft size={16} />
+          Back to Home
+        </Link>
       </section>
     </main>
   );

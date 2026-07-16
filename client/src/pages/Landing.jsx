@@ -63,6 +63,30 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
+    const elements = Array.from(document.querySelectorAll('.revealBlock'));
+    if (!elements.length) return undefined;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      elements.forEach((element) => element.classList.add('isVisible'));
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('isVisible');
+          observer.unobserve(entry.target);
+        });
+      },
+      { rootMargin: '0px 0px -18% 0px', threshold: 0.16 }
+    );
+
+    elements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     async function loadClasses() {
       try {
         setClassesState({ loading: true, error: false });
@@ -196,7 +220,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="landingBand" aria-label="Schulschwerpunkte">
+      <section className="landingBand revealBlock" aria-label="Schulschwerpunkte">
         <article>
           <span>Unterricht</span>
           <strong>Strukturierte Deutschkurse mit klaren Lernzielen.</strong>
