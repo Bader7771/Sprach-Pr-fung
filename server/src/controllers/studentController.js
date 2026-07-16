@@ -10,6 +10,22 @@ const noteSchema = z.object({
   grade: z.coerce.number().min(0).max(20),
   comment: z.string().trim().optional().default('')
 });
+const examScoreSchema = z.preprocess(
+  (value) => value === '' || value === null ? undefined : value,
+  z.coerce.number().min(0).max(20).optional()
+);
+const examsSchema = z.object({
+  exam1: examScoreSchema,
+  exam2: examScoreSchema,
+  exam3: examScoreSchema,
+  exam4: examScoreSchema
+}).optional();
+const examAbsencesSchema = z.object({
+  exam1: z.coerce.boolean().optional().default(false),
+  exam2: z.coerce.boolean().optional().default(false),
+  exam3: z.coerce.boolean().optional().default(false),
+  exam4: z.coerce.boolean().optional().default(false)
+}).optional();
 
 const studentSchema = z.object({
   firstName: z.string().min(1).trim(),
@@ -17,7 +33,9 @@ const studentSchema = z.object({
   studentNumber: z.string().trim().optional().default(''),
   comments: z.string().trim().optional().default(''),
   classRoom: objectId,
-  notes: z.array(noteSchema).optional()
+  notes: z.array(noteSchema).optional(),
+  exams: examsSchema,
+  examAbsences: examAbsencesSchema
 });
 
 function escapeRegex(value) {
@@ -97,6 +115,12 @@ export const updateStudent = asyncHandler(async (req, res) => {
 
   Object.assign(student, studentPayload(data, classRoom, req.admin._id));
   if (data.notes) student.notes = data.notes;
+  if (data.examAbsences) student.examAbsences = data.examAbsences;
+  if (data.exams) {
+    ['exam1', 'exam2', 'exam3', 'exam4'].forEach((key) => {
+      student.set(`exams.${key}`, data.examAbsences?.[key] ? undefined : data.exams[key]);
+    });
+  }
   await student.save();
   await writeAudit({ actor: req.admin._id, action: 'UPDATE', entity: 'Student', entityId: student._id.toString() });
   res.json(student);

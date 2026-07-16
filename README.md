@@ -51,12 +51,59 @@ npm run dev
 
 The frontend runs on `http://localhost:3000` and the backend on `http://localhost:5000`.
 
+To start only the client:
+
+```bash
+npm run dev --prefix client
+```
+
+To start only the server:
+
+```bash
+npm run dev --prefix server
+```
+
+To run both together from the project root:
+
+```bash
+npm run dev
+```
+
+## Default Admin Login
+
+Email:
+
+```text
+Bilaladmin@egim.ma
+```
+
+Password:
+
+```text
+Bilaltheadmin2024
+```
+
+Required backend environment variables:
+
+- `MONGO_URI`: MongoDB connection string with a database name.
+- `JWT_SECRET`: long random signing secret for JWT authentication.
+- `CLIENT_URL`: frontend URL, usually `http://localhost:3000` locally.
+- `ALLOWED_ORIGINS`: comma-separated allowed frontend origins.
+- `PORT`: backend port, usually `5000` locally.
+- `JWT_EXPIRES_IN`: JWT lifetime, for example `7d`.
+
+Required frontend environment variables:
+
+- `REACT_APP_API_URL`: backend API base URL, usually `http://localhost:5000` locally.
+
+Start the server and client, open `http://localhost:3000/login`, then log in with the default administrator email and password above.
+
 ## Admin Account
 
 Create or update the EGIM admin manually:
 
 ```bash
-ADMIN_EMAIL=Bilaladmin@egim.ma ADMIN_PASSWORD='your_password_here' npm run seed:admin --prefix server
+ADMIN_EMAIL=Bilaladmin@egim.ma ADMIN_PASSWORD='Bilaltheadmin2024' npm run seed:admin --prefix server
 ```
 
 To update an existing admin password/profile, add:

@@ -8,6 +8,7 @@ import { getDatabaseStatus } from './config/db.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import classRoutes from './routes/classRoutes.js';
+import publicRoutes from './routes/publicRoutes.js';
 import studentRoutes from './routes/studentRoutes.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { requestId } from './middleware/requestId.js';
@@ -46,6 +47,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/public', publicRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/analytics', analyticsRoutes);

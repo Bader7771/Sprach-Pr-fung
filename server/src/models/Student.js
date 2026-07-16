@@ -22,6 +22,12 @@ const studentSchema = new mongoose.Schema(
       exam3: { type: Number, min: 0, max: 20 },
       exam4: { type: Number, min: 0, max: 20 }
     },
+    examAbsences: {
+      exam1: { type: Boolean, default: false },
+      exam2: { type: Boolean, default: false },
+      exam3: { type: Boolean, default: false },
+      exam4: { type: Boolean, default: false }
+    },
     finalNote: { type: Number, default: 0 },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' }
@@ -59,9 +65,15 @@ studentSchema.pre('validate', function normalizeStudent(next) {
     this.notes = notesFromLegacyExams(this.exams);
   }
 
-  const grades = (this.notes || [])
+  const examKeys = ['exam1', 'exam2', 'exam3', 'exam4'];
+  const examGrades = examKeys
+    .filter((key) => !this.examAbsences?.[key])
+    .map((key) => Number(this.exams?.[key]))
+    .filter((grade) => Number.isFinite(grade));
+  const noteGrades = (this.notes || [])
     .map((note) => Number(note.grade))
     .filter((grade) => Number.isFinite(grade));
+  const grades = examGrades.length ? examGrades : noteGrades;
 
   this.finalNote = grades.length
     ? Number((grades.reduce((sum, grade) => sum + grade, 0) / grades.length).toFixed(2))

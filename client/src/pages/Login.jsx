@@ -30,7 +30,7 @@ export default function Login() {
       <section className="authPanel">
         <div className="brandMark"><GraduationCap size={30} /></div>
         <h1>Admin Login</h1>
-        <p>Secure access to EGIM classes, students, notes, and averages.</p>
+        <p>Secure access to Sprach-Pr-fung classes, students, exams, and averages.</p>
         <form onSubmit={handleSubmit(submit)}>
           <label>Email<input type="email" {...register('email', { required: true })} /></label>
           <label>Password<input type="password" {...register('password', { required: true })} /></label>

@@ -4,11 +4,11 @@ import { toast } from 'react-toastify';
 import http from '../api/http.js';
 import ClassForm from '../components/ClassForm.jsx';
 import ConfirmModal from '../components/ConfirmModal.jsx';
-import NoteForm from '../components/NoteForm.jsx';
 import StatCard from '../components/StatCard.jsx';
 import StudentForm from '../components/StudentForm.jsx';
 import StudentTable from '../components/StudentTable.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { calculateExamAverage, examKeys } from '../utils/results.js';
 
 function studentName(student) {
   return student?.fullName || [student?.firstName, student?.lastName].filter(Boolean).join(' ');
@@ -28,6 +28,7 @@ export default function Dashboard() {
   const [confirm, setConfirm] = useState(null);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [savingStudentId, setSavingStudentId] = useState('');
 
   const selectedClass = useMemo(
     () => classes.find((item) => item._id === selectedClassId),
@@ -139,37 +140,6 @@ export default function Dashboard() {
     }
   }
 
-  async function submitNote(values) {
-    if (!selectedStudent) return;
-    try {
-      if (noteEdit) {
-        const { data } = await http.put(`/students/${selectedStudent._id}/notes/${noteEdit._id}`, values);
-        setSelectedStudent(data);
-        toast.success('Note updated');
-      } else {
-        const { data } = await http.post(`/students/${selectedStudent._id}/notes`, values);
-        setSelectedStudent(data);
-        toast.success('Note added');
-      }
-      setNoteEdit(null);
-      await Promise.all([loadStudents(), loadClasses()]);
-    } catch (error) {
-      toast.error(error.userMessage || 'Note save failed');
-    }
-  }
-
-  async function deleteNote(note) {
-    if (!selectedStudent) return;
-    try {
-      const { data } = await http.delete(`/students/${selectedStudent._id}/notes/${note._id}`);
-      setSelectedStudent(data);
-      toast.success('Note deleted');
-      await Promise.all([loadStudents(), loadClasses()]);
-    } catch (error) {
-      toast.error(error.userMessage || 'Delete failed');
-    }
-  }
-
   function startAddStudent() {
     if (!selectedClassId) {
       toast.info('Create or select a class first');
@@ -179,12 +149,51 @@ export default function Dashboard() {
     setShowStudentForm(true);
   }
 
+  async function saveStudentExams(student, draft) {
+    const invalidExam = examKeys.find((key) => {
+      if (draft.examAbsences[key] || draft.exams[key] === '') return false;
+      const value = Number(draft.exams[key]);
+      return !Number.isFinite(value) || value < 0 || value > 20;
+    });
+
+    if (invalidExam) {
+      toast.error('Each exam score must be between 0 and 20.');
+      return;
+    }
+
+    try {
+      setSavingStudentId(student._id);
+      const payload = {
+        firstName: student.firstName || student.fullName?.split(' ')[0] || '',
+        lastName: student.lastName || student.fullName?.split(' ').slice(1).join(' ') || '',
+        studentNumber: student.studentNumber || '',
+        comments: student.comments || '',
+        classRoom: student.classRoom || selectedClassId,
+        notes: student.notes || [],
+        exams: Object.fromEntries(examKeys.map((key) => [
+          key,
+          draft.examAbsences[key] || draft.exams[key] === '' ? undefined : Number(draft.exams[key])
+        ])),
+        examAbsences: draft.examAbsences
+      };
+      const { data } = await http.put(`/students/${student._id}`, payload);
+      setStudents((current) => current.map((item) => item._id === data._id ? data : item));
+      if (selectedStudent?._id === data._id) setSelectedStudent(data);
+      toast.success('Exam results saved');
+      await loadClasses();
+    } catch (error) {
+      toast.error(error.userMessage || 'Exam results save failed');
+    } finally {
+      setSavingStudentId('');
+    }
+  }
+
   return (
     <main className="dashboard simple">
       <header className="appHeader">
         <div>
-          <span className="eyebrow">EGIM Admin</span>
-          <h1>Classes and Student Notes</h1>
+          <span className="eyebrow">Sprach-Pr-fung Admin</span>
+          <h1>Classes and Exam Results</h1>
           <p>{admin?.name || admin?.email}</p>
         </div>
         <button className="btn ghost" onClick={logout}><LogOut size={16} /> Logout</button>
@@ -257,6 +266,8 @@ export default function Dashboard() {
             onView={setSelectedStudent}
             onEdit={(student) => { setStudentEdit(student); setShowStudentForm(true); }}
             onDelete={(student) => setConfirm({ type: 'student', item: student })}
+            onSaveExams={saveStudentExams}
+            savingStudentId={savingStudentId}
           />
         </section>
       </section>
@@ -267,34 +278,26 @@ export default function Dashboard() {
             <div className="panelHead wrap">
               <div>
                 <h2>{studentName(selectedStudent)}</h2>
-                <span>Average: {Number(selectedStudent.finalNote || 0).toFixed(2)}</span>
+                <span>Average: {calculateExamAverage(selectedStudent).average ?? Number(selectedStudent.finalNote || 0).toFixed(2)}</span>
               </div>
               <button className="btn danger" onClick={() => setConfirm({ type: 'student', item: selectedStudent })}><Trash2 size={16} /> Delete Student</button>
             </div>
             {selectedStudent.comments && <p className="studentComment">{selectedStudent.comments}</p>}
-            <div className="notesLayout">
-              <div className="notesList">
-                {(selectedStudent.notes || []).map((note) => (
-                  <div className="noteItem" key={note._id}>
-                    <span>
-                      <strong>{note.subject}</strong>
-                      {note.comment && <small>{note.comment}</small>}
-                    </span>
-                    <strong>{Number(note.grade).toFixed(2)}</strong>
-                    <button className="btn tiny" onClick={() => setNoteEdit(note)}>Edit</button>
-                    <button className="btn tiny danger" onClick={() => deleteNote(note)}>Delete</button>
-                  </div>
-                ))}
-                {!selectedStudent.notes?.length && <p className="emptyState">No notes yet.</p>}
-              </div>
-              <div className="subPanel">
-                <h3>{noteEdit ? 'Edit Note' : 'Add Note'}</h3>
-                <NoteForm editing={noteEdit} onSubmit={submitNote} onCancel={() => setNoteEdit(null)} />
-              </div>
+            <div className="examSummaryGrid">
+              {examKeys.map((key, index) => {
+                const absent = selectedStudent.examAbsences?.[key];
+                const value = selectedStudent.exams?.[key];
+                return (
+                  <article className="examSummary" key={key}>
+                    <span>Exam {index + 1}</span>
+                    <strong>{absent ? 'Absent' : Number.isFinite(Number(value)) ? `${Number(value).toFixed(2)}/20` : '-'}</strong>
+                  </article>
+                );
+              })}
             </div>
           </>
         ) : (
-          <p className="emptyState">Select a student to view notes.</p>
+          <p className="emptyState">Select a student to view exam results.</p>
         )}
       </section>
 
