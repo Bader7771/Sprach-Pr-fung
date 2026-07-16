@@ -1,5 +1,12 @@
 import mongoose from 'mongoose';
 
+const examLabels = {
+  exam1: 'Lesen',
+  exam2: 'Hören',
+  exam3: 'Schreiben',
+  exam4: 'Sprechen'
+};
+
 const studentSchema = new mongoose.Schema(
   {
     firstName: { type: String, trim: true },
@@ -48,7 +55,7 @@ function splitName(fullName = '') {
 
 function notesFromLegacyExams(exams = {}) {
   return ['exam1', 'exam2', 'exam3', 'exam4']
-    .map((key, index) => ({ subject: `Note ${index + 1}`, grade: exams[key] }))
+    .map((key) => ({ subject: examLabels[key], grade: exams[key] }))
     .filter((note) => Number.isFinite(note.grade));
 }
 

@@ -1,4 +1,14 @@
 export const examKeys = ['exam1', 'exam2', 'exam3', 'exam4'];
+export const examLabels = {
+  exam1: 'Lesen',
+  exam2: 'Hören',
+  exam3: 'Schreiben',
+  exam4: 'Sprechen'
+};
+
+export function getExamLabel(key) {
+  return examLabels[key] || key;
+}
 
 export function getStudentName(student) {
   return student?.fullName || [student?.firstName, student?.lastName].filter(Boolean).join(' ');
@@ -29,6 +39,11 @@ export function calculateExamAverage(student) {
     completedCount: scores.length,
     absentCount: examKeys.filter((key) => student?.examAbsences?.[key]).length
   };
+}
+
+export function hasPassedExam(student) {
+  const result = calculateExamAverage(student);
+  return result.average !== null && result.average >= 10;
 }
 
 export function hasAnyExamResult(student) {

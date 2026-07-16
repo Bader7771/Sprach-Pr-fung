@@ -1,9 +1,9 @@
 import { connectDB } from '../config/db.js';
-import { validateEnv } from '../config/env.js';
+import { requireEnv } from '../config/env.js';
 import Admin from '../models/Admin.js';
 
 async function run() {
-  validateEnv();
+  requireEnv('JWT_SECRET');
 
   const email = process.env.ADMIN_EMAIL || process.env.SEED_ADMIN_EMAIL || 'Bilaladmin@egim.ma';
   const password = process.env.ADMIN_PASSWORD || process.env.SEED_ADMIN_PASSWORD;

@@ -1,4 +1,4 @@
-import { LogOut, Plus, Search, Trash2 } from 'lucide-react';
+import { FileDown, LogOut, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import http from '../api/http.js';
@@ -8,7 +8,8 @@ import StatCard from '../components/StatCard.jsx';
 import StudentForm from '../components/StudentForm.jsx';
 import StudentTable from '../components/StudentTable.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-import { calculateExamAverage, examKeys } from '../utils/results.js';
+import { buildAttestationPdf } from '../utils/attestationPdf.js';
+import { calculateExamAverage, examKeys, getExamLabel, hasPassedExam } from '../utils/results.js';
 
 function studentName(student) {
   return student?.fullName || [student?.firstName, student?.lastName].filter(Boolean).join(' ');
@@ -29,6 +30,7 @@ export default function Dashboard() {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [savingStudentId, setSavingStudentId] = useState('');
+  const [generatingAttestationId, setGeneratingAttestationId] = useState('');
 
   const selectedClass = useMemo(
     () => classes.find((item) => item._id === selectedClassId),
@@ -157,7 +159,7 @@ export default function Dashboard() {
     });
 
     if (invalidExam) {
-      toast.error('Each exam score must be between 0 and 20.');
+      toast.error(`${getExamLabel(invalidExam)} score must be between 0 and 20.`);
       return;
     }
 
@@ -185,6 +187,24 @@ export default function Dashboard() {
       toast.error(error.userMessage || 'Exam results save failed');
     } finally {
       setSavingStudentId('');
+    }
+  }
+
+  async function printAttestation(student) {
+    if (!hasPassedExam(student)) {
+      toast.info('Attestation is available only for students with an average of 10/20 or higher.');
+      return;
+    }
+
+    try {
+      setGeneratingAttestationId(student._id);
+      const { doc, fileName } = buildAttestationPdf(student, student.className || selectedClass?.className);
+      doc.save(fileName);
+      toast.success('Attestation PDF generated');
+    } catch (error) {
+      toast.error(error.message || 'Attestation PDF could not be generated. Please try again.');
+    } finally {
+      setGeneratingAttestationId('');
     }
   }
 
@@ -267,7 +287,9 @@ export default function Dashboard() {
             onEdit={(student) => { setStudentEdit(student); setShowStudentForm(true); }}
             onDelete={(student) => setConfirm({ type: 'student', item: student })}
             onSaveExams={saveStudentExams}
+            onPrintAttestation={printAttestation}
             savingStudentId={savingStudentId}
+            generatingAttestationId={generatingAttestationId}
           />
         </section>
       </section>
@@ -278,18 +300,30 @@ export default function Dashboard() {
             <div className="panelHead wrap">
               <div>
                 <h2>{studentName(selectedStudent)}</h2>
-                <span>Average: {calculateExamAverage(selectedStudent).average ?? Number(selectedStudent.finalNote || 0).toFixed(2)}</span>
+                <span>Average: {calculateExamAverage(selectedStudent).average?.toFixed(2) ?? Number(selectedStudent.finalNote || 0).toFixed(2)}</span>
               </div>
-              <button className="btn danger" onClick={() => setConfirm({ type: 'student', item: selectedStudent })}><Trash2 size={16} /> Delete Student</button>
+              <div className="rowActions">
+                {hasPassedExam(selectedStudent) && (
+                  <button
+                    className="btn secondary"
+                    onClick={() => printAttestation(selectedStudent)}
+                    disabled={generatingAttestationId === selectedStudent._id}
+                  >
+                    <FileDown size={16} />
+                    {generatingAttestationId === selectedStudent._id ? 'Generating...' : 'Download Attestation PDF'}
+                  </button>
+                )}
+                <button className="btn danger" onClick={() => setConfirm({ type: 'student', item: selectedStudent })}><Trash2 size={16} /> Delete Student</button>
+              </div>
             </div>
             {selectedStudent.comments && <p className="studentComment">{selectedStudent.comments}</p>}
             <div className="examSummaryGrid">
-              {examKeys.map((key, index) => {
+              {examKeys.map((key) => {
                 const absent = selectedStudent.examAbsences?.[key];
                 const value = selectedStudent.exams?.[key];
                 return (
                   <article className="examSummary" key={key}>
-                    <span>Exam {index + 1}</span>
+                    <span>{getExamLabel(key)}</span>
                     <strong>{absent ? 'Absent' : Number.isFinite(Number(value)) ? `${Number(value).toFixed(2)}/20` : '-'}</strong>
                   </article>
                 );

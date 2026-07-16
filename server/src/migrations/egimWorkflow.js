@@ -2,6 +2,13 @@ import mongoose from 'mongoose';
 import { connectDB } from '../config/db.js';
 import { validateEnv } from '../config/env.js';
 
+const examLabels = {
+  exam1: 'Lesen',
+  exam2: 'Hören',
+  exam3: 'Schreiben',
+  exam4: 'Sprechen'
+};
+
 function splitName(fullName = '') {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
   return {
@@ -12,7 +19,7 @@ function splitName(fullName = '') {
 
 function notesFromExams(exams = {}) {
   return ['exam1', 'exam2', 'exam3', 'exam4']
-    .map((key, index) => ({ subject: `Note ${index + 1}`, grade: exams[key] }))
+    .map((key) => ({ subject: examLabels[key], grade: exams[key] }))
     .filter((note) => Number.isFinite(Number(note.grade)))
     .map((note) => ({ ...note, grade: Number(note.grade), comment: '' }));
 }

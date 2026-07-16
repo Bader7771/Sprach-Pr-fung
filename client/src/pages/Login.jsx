@@ -32,8 +32,8 @@ export default function Login() {
         <h1>Admin Login</h1>
         <p>Secure access to Sprach-Pr-fung classes, students, exams, and averages.</p>
         <form onSubmit={handleSubmit(submit)}>
-          <label>Email<input type="email" {...register('email', { required: true })} /></label>
-          <label>Password<input type="password" {...register('password', { required: true })} /></label>
+          <label>Email<input type="email" autoComplete="username" {...register('email', { required: true })} /></label>
+          <label>Password<input type="password" autoComplete="current-password" {...register('password', { required: true })} /></label>
           <button className="btn primary full" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</button>
         </form>
       </section>

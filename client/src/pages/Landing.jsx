@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import http from '../api/http.js';
 import shakespearePortrait from '../assets/william shakespeare.png';
-import { examKeys, getExamDisplay, getStudentName, hasAnyExamResult, rankStudents } from '../utils/results.js';
+import { examKeys, getExamDisplay, getExamLabel, getStudentName, hasAnyExamResult, rankStudents } from '../utils/results.js';
 
 const navItems = [
   { id: 'startseite', label: 'Startseite' },
@@ -269,7 +269,8 @@ export default function Landing() {
           <span className="sectionKicker">Prufungen</span>
           <h2 id="exams-title">Vier Prufungen, klare Bewertung, transparente Entwicklung.</h2>
           <p>
-            Jede Schulerin und jeder Schuler kann vier Prufungsergebnisse erhalten.
+            Jede Schulerin und jeder Schuler kann Ergebnisse fur Lesen, Hören,
+            Schreiben und Sprechen erhalten.
             Jede Note wird von 0 bis 20 Punkten bewertet. 20/20 ist das beste
             Ergebnis, 0/20 das niedrigste numerische Ergebnis.
           </p>
@@ -281,9 +282,9 @@ export default function Landing() {
           </p>
         </div>
         <div className="examRules">
-          {examKeys.map((key, index) => (
+          {examKeys.map((key) => (
             <article key={key}>
-              <span>Prufung {index + 1}</span>
+              <span>{getExamLabel(key)}</span>
               <strong>0-20</strong>
             </article>
           ))}
@@ -330,10 +331,7 @@ export default function Landing() {
                   <tr>
                     <th>Rang</th>
                     <th>Name</th>
-                    <th>Prufung 1</th>
-                    <th>Prufung 2</th>
-                    <th>Prufung 3</th>
-                    <th>Prufung 4</th>
+                    {examKeys.map((key) => <th key={key}>{getExamLabel(key)}</th>)}
                     <th>Durchschnitt</th>
                   </tr>
                 </thead>

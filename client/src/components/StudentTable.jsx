@@ -1,6 +1,6 @@
-import { Eye, Pencil, Save, Trash2 } from 'lucide-react';
+import { FileDown, Eye, Pencil, Save, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { calculateExamAverage, examKeys, getStudentName, normalizeExamValue } from '../utils/results.js';
+import { calculateExamAverage, examKeys, getExamLabel, getStudentName, hasPassedExam, normalizeExamValue } from '../utils/results.js';
 
 function studentName(student) {
   return getStudentName(student);
@@ -13,9 +13,10 @@ function buildDraft(student) {
   };
 }
 
-function ExamEditorRow({ student, onView, onEdit, onDelete, onSaveExams, saving }) {
+function ExamEditorRow({ student, onView, onEdit, onDelete, onSaveExams, onPrintAttestation, saving, generatingAttestation }) {
   const [draft, setDraft] = useState(() => buildDraft(student));
   const average = calculateExamAverage({ ...student, ...draft });
+  const passed = hasPassedExam(student);
 
   useEffect(() => {
     setDraft(buildDraft(student));
@@ -39,10 +40,10 @@ function ExamEditorRow({ student, onView, onEdit, onDelete, onSaveExams, saving 
     <tr>
       <td><strong>{studentName(student)}</strong></td>
       <td>{student.studentNumber || '-'}</td>
-      {examKeys.map((key, index) => (
+      {examKeys.map((key) => (
         <td key={key}>
           <div className="examEditCell">
-            <label className="srOnly" htmlFor={`${student._id}-${key}`}>Exam {index + 1} score</label>
+            <label className="srOnly" htmlFor={`${student._id}-${key}`}>{getExamLabel(key)} score</label>
             <input
               id={`${student._id}-${key}`}
               type="number"
@@ -52,7 +53,7 @@ function ExamEditorRow({ student, onView, onEdit, onDelete, onSaveExams, saving 
               value={draft.exams[key]}
               disabled={draft.examAbsences[key]}
               onChange={(event) => updateScore(key, event.target.value)}
-              aria-label={`Exam ${index + 1} score for ${studentName(student)}`}
+              aria-label={`${getExamLabel(key)} score for ${studentName(student)}`}
             />
             <label className="absenceToggle">
               <input
@@ -74,6 +75,17 @@ function ExamEditorRow({ student, onView, onEdit, onDelete, onSaveExams, saving 
           <button className="iconBtn" onClick={() => onSaveExams(student, draft)} disabled={saving} title="Save exam results" aria-label={`Save exam results for ${studentName(student)}`}>
             <Save size={16} />
           </button>
+          {passed && (
+            <button
+              className="iconBtn"
+              onClick={() => onPrintAttestation(student)}
+              disabled={generatingAttestation}
+              title="Download attestation PDF"
+              aria-label={`Download attestation PDF for ${studentName(student)}`}
+            >
+              <FileDown size={16} />
+            </button>
+          )}
           <button className="iconBtn" onClick={() => onView(student)} title="View student" aria-label={`View ${studentName(student)}`}><Eye size={16} /></button>
           <button className="iconBtn" onClick={() => onEdit(student)} title="Edit student" aria-label={`Edit ${studentName(student)}`}><Pencil size={16} /></button>
           <button className="iconBtn dangerText" onClick={() => onDelete(student)} title="Delete student" aria-label={`Delete ${studentName(student)}`}><Trash2 size={16} /></button>
@@ -83,7 +95,16 @@ function ExamEditorRow({ student, onView, onEdit, onDelete, onSaveExams, saving 
   );
 }
 
-export default function StudentTable({ students, onView, onEdit, onDelete, onSaveExams, savingStudentId }) {
+export default function StudentTable({
+  students,
+  onView,
+  onEdit,
+  onDelete,
+  onSaveExams,
+  onPrintAttestation,
+  savingStudentId,
+  generatingAttestationId
+}) {
   return (
     <div className="tableWrap">
       <table className="studentExamTable">
@@ -91,10 +112,7 @@ export default function StudentTable({ students, onView, onEdit, onDelete, onSav
           <tr>
             <th>Full Name</th>
             <th>Student Number</th>
-            <th>Exam 1</th>
-            <th>Exam 2</th>
-            <th>Exam 3</th>
-            <th>Exam 4</th>
+            {examKeys.map((key) => <th key={key}>{getExamLabel(key)}</th>)}
             <th>Average</th>
             <th>Actions</th>
           </tr>
@@ -109,6 +127,8 @@ export default function StudentTable({ students, onView, onEdit, onDelete, onSav
               onDelete={onDelete}
               onSaveExams={onSaveExams}
               saving={savingStudentId === student._id}
+              onPrintAttestation={onPrintAttestation}
+              generatingAttestation={generatingAttestationId === student._id}
             />
           ))}
           {!students.length && (

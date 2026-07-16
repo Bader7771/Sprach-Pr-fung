@@ -8,10 +8,12 @@ Full-stack admin application for EGIM class management. The app uses React, Expr
 - Create, edit, and delete classes
 - Add, edit, delete, search, and sort students inside a class
 - Add, edit, and delete student notes by subject
+- Manage Lesen, Hören, Schreiben, and Sprechen exam scores
 - Automatic average calculation per student
+- Generate attestation PDFs for students with a final average of 10/20 or higher
 - Dashboard cards for total classes, total students, average grade, and recent students
 
-There are no groups, demo records, public result pages, certificate generation, or Excel import/export features in the current workflow.
+There are no groups, demo records, official ÖSD certificate generation, or Excel import/export features in the current workflow.
 
 ## Project Structure
 
@@ -69,20 +71,6 @@ To run both together from the project root:
 npm run dev
 ```
 
-## Default Admin Login
-
-Email:
-
-```text
-Bilaladmin@egim.ma
-```
-
-Password:
-
-```text
-Bilaltheadmin2024
-```
-
 Required backend environment variables:
 
 - `MONGO_URI`: MongoDB connection string with a database name.
@@ -96,14 +84,14 @@ Required frontend environment variables:
 
 - `REACT_APP_API_URL`: backend API base URL, usually `http://localhost:5000` locally.
 
-Start the server and client, open `http://localhost:3000/login`, then log in with the default administrator email and password above.
+Start the server and client, then open `http://localhost:3000/login`.
 
 ## Admin Account
 
-Create or update the EGIM admin manually:
+Create or update the EGIM admin manually. Choose a strong password and provide it through the shell environment; do not commit it to the repository.
 
 ```bash
-ADMIN_EMAIL=Bilaladmin@egim.ma ADMIN_PASSWORD='Bilaltheadmin2024' npm run seed:admin --prefix server
+ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD='replace-with-a-strong-password' npm run seed:admin --prefix server
 ```
 
 To update an existing admin password/profile, add:
