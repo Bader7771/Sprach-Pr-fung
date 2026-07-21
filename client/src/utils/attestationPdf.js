@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import egimLogo from '../assets/egim-logo-transparent.png';
-import { calculateExamAverage, getStudentName } from './results.js';
+import { calculateExamAverage, examKeys, getExamLabel, getStudentName, normalizeExamValue } from './results.js';
 
 const PAGE_WIDTH = 210;
 const PAGE_HEIGHT = 297;
@@ -153,8 +153,8 @@ function drawSignatures(doc, issueDate) {
   doc.setFont('times', 'normal');
   doc.setFontSize(10.5);
   doc.setTextColor(...MUTED_INK);
-  doc.text('Ort: MEKNES', 28, 222);
-  doc.text(`Ausstellungsdatum: ${issueDate}`, 182, 222, { align: 'right' });
+  doc.text('Ort: MEKNES', 28, 233);
+  doc.text(`Ausstellungsdatum: ${issueDate}`, 182, 233, { align: 'right' });
 
   doc.setDrawColor(120, 125, 126);
   doc.setLineWidth(0.25);
@@ -166,6 +166,49 @@ function drawSignatures(doc, issueDate) {
   doc.text('CHTATOU BILAL', 55.5, 251, { align: 'center' });
   doc.text('Stempel der Institution', 154.5, 247, { align: 'center' });
   doc.text('EL MEHDI CHALH', 154.5, 251, { align: 'center' });
+}
+
+function formatExamScore(student, key) {
+  if (student?.examAbsences?.[key]) return 'Abwesend';
+  const value = normalizeExamValue(student?.exams?.[key]);
+  if (value === '' || value < 0 || value > 100) return '-';
+  return String(Number(Number(value).toFixed(2)));
+}
+
+function drawExamResultsTable(doc, student, average) {
+  const x = 30;
+  const y = 181.5;
+  const width = 150;
+  const moduleWidth = 58;
+  const scoreWidth = width - moduleWidth;
+  const rowHeight = 7.5;
+  const rows = examKeys.map((key) => [getExamLabel(key), formatExamScore(student, key)]);
+  rows.push(['Gesamtpunktzahl', String(Number(average.toFixed(2)))]);
+
+  doc.setLineWidth(0.25);
+  doc.setDrawColor(166, 157, 132);
+  doc.setFillColor(241, 237, 225);
+  doc.rect(x, y, width, rowHeight, 'FD');
+  doc.line(x + moduleWidth, y, x + moduleWidth, y + rowHeight);
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...INK);
+  doc.text('Modul', x + 4, y + 5.1);
+  doc.text('Erreichte Punktzahl (max. 100, min. 60)', x + moduleWidth + scoreWidth / 2, y + 5.1, { align: 'center' });
+
+  rows.forEach(([label, score], index) => {
+    const rowY = y + rowHeight * (index + 1);
+    const isTotal = index === rows.length - 1;
+    doc.setFillColor(isTotal ? 247 : 252, isTotal ? 244 : 252, isTotal ? 235 : 249);
+    doc.rect(x, rowY, width, rowHeight, 'FD');
+    doc.line(x + moduleWidth, rowY, x + moduleWidth, rowY + rowHeight);
+    doc.setFont('times', isTotal ? 'bold' : 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(...INK);
+    doc.text(label, x + 4, rowY + 5.1);
+    doc.text(score, x + moduleWidth + scoreWidth / 2, rowY + 5.1, { align: 'center' });
+  });
 }
 
 export function buildAttestationPdf(student, selectedLevel) {
@@ -197,15 +240,16 @@ export function buildAttestationPdf(student, selectedLevel) {
 
   centered(doc, studentName, 87, 27, 'bold', INK, 174);
 
-  centered(doc, 'hat die Prüfung', 113, 12.5, 'normal', MUTED_INK);
-  centered(doc, 'Deutsch Sprachprüfung', 143, 25.5, 'bold', INK, 180);
-  centered(doc, level, 153, 13.5, 'bold', INK, 180);
+  centered(doc, 'hat die Prüfung', 102, 12.5, 'normal', MUTED_INK);
+  centered(doc, 'Deutsch Sprachprüfung', 119, 25.5, 'bold', INK, 180);
+  centered(doc, level, 129, 13.5, 'bold', INK, 180);
 
-  centered(doc, 'am Prüfungszentrum', 164, 12.5, 'normal', MUTED_INK);
-  centered(doc, SCHOOL_NAME, 179, 16, 'bold', INK, 165);
-  centered(doc, 'Morocco', 191, 12.5, 'normal', MUTED_INK);
+  centered(doc, 'am Prüfungszentrum', 140, 12.5, 'normal', MUTED_INK);
+  centered(doc, SCHOOL_NAME, 151, 16, 'bold', INK, 165);
+  centered(doc, 'Marokko', 160, 12.5, 'normal', MUTED_INK);
 
-  centered(doc, 'bestanden', 211, 24, 'bold', INK, 170);
+  centered(doc, 'bestanden', 176, 24, 'bold', INK, 170);
+  drawExamResultsTable(doc, student, result.average);
 
   drawSignatures(doc, issueDate);
   drawWorldMap(doc);

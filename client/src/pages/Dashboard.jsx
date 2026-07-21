@@ -81,6 +81,17 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    root.classList.add('adminDashboardActive');
+    body.classList.add('adminDashboardActive');
+    return () => {
+      root.classList.remove('adminDashboardActive');
+      body.classList.remove('adminDashboardActive');
+    };
+  }, []);
+
+  useEffect(() => {
     loadStudents().catch((error) => toast.error(error.userMessage || 'Failed to load students'));
   }, [selectedClassId]);
 

@@ -106,7 +106,7 @@ export default function StudentTable({
   generatingAttestationId
 }) {
   return (
-    <div className="tableWrap">
+    <div className="tableWrap studentTableScroll">
       <table className="studentExamTable">
         <thead>
           <tr>
