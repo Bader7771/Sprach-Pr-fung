@@ -80,8 +80,8 @@ function ExamEditorRow({ student, onView, onEdit, onDelete, onSaveExams, onPrint
               className="iconBtn"
               onClick={() => onPrintAttestation(student)}
               disabled={generatingAttestation}
-              title="Download attestation PDF"
-              aria-label={`Download attestation PDF for ${studentName(student)}`}
+              title="Print Attestation"
+              aria-label={`Print Attestation for ${studentName(student)}`}
             >
               <FileDown size={16} />
             </button>

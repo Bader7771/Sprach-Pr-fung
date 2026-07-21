@@ -1,9 +1,10 @@
 import { jsPDF } from 'jspdf';
-import { calculateExamAverage, examKeys, getExamDisplay, getExamLabel, getStudentName } from './results.js';
+import { calculateExamAverage, getStudentName } from './results.js';
 
 const PAGE_WIDTH = 210;
 const PAGE_HEIGHT = 297;
-const MARGIN = 18;
+const SCHOOL_NAME = process.env.REACT_APP_SCHOOL_NAME || 'EGIM';
+const SCHOOL_CITY = process.env.REACT_APP_SCHOOL_CITY || 'Casablanca';
 
 function cleanText(value, fallback = '-') {
   return String(value || fallback)
@@ -23,163 +24,101 @@ function safeFilePart(value) {
     .slice(0, 80) || 'student';
 }
 
-function splitText(doc, text, maxWidth) {
-  return doc.splitTextToSize(cleanText(text), maxWidth);
+function formatGermanDate(value) {
+  if (!value) return '--.--.----';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--.--.----';
+  return new Intl.DateTimeFormat('de-DE', {
+    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC'
+  }).format(date);
 }
 
-function referenceNumber(student) {
-  const id = cleanText(student?._id || Date.now().toString(), 'local').slice(-8).toUpperCase();
-  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  return `SP-${date}-${id}`;
-}
-
-function drawCenteredLines(doc, lines, y, options = {}) {
-  const { size = 12, color = [31, 41, 55], lineHeight = 7, font = 'helvetica', style = 'normal' } = options;
-  doc.setFont(font, style);
+function centered(doc, text, y, size, style = 'normal', color = 45) {
+  doc.setFont('times', style);
   doc.setFontSize(size);
-  doc.setTextColor(...color);
-  lines.forEach((line, index) => {
-    doc.text(line, PAGE_WIDTH / 2, y + index * lineHeight, { align: 'center' });
-  });
-  return y + lines.length * lineHeight;
+  doc.setTextColor(color);
+  doc.text(cleanText(text), PAGE_WIDTH / 2, y, { align: 'center' });
 }
 
-export function buildAttestationPdf(student, className) {
+// Quiet, low-contrast latitude/longitude decoration used on the reference-style paper.
+function drawBackground(doc) {
+  doc.setFillColor(250, 250, 249);
+  doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, 'F');
+  doc.setDrawColor(236, 236, 234);
+  doc.setLineWidth(0.18);
+  [28, 52, 76, 100, 124, 148, 172].forEach((x) => doc.ellipse(105, 151, x, 112, 'S'));
+  [70, 94, 118, 142, 166, 190, 214, 238].forEach((y) => doc.ellipse(105, 151, 78, Math.abs(y - 151) + 8, 'S'));
+}
+
+function drawWorldMap(doc) {
+  doc.setFillColor(224, 224, 222);
+  const land = [
+    [[37,247],[43,242],[51,241],[58,245],[55,251],[48,253],[45,260],[40,256]],
+    [[59,261],[65,263],[69,270],[66,280],[61,274]],
+    [[86,246],[94,240],[107,241],[111,246],[105,250],[100,258],[94,255],[90,261],[84,255]],
+    [[111,242],[124,238],[140,241],[149,246],[160,244],[173,249],[168,255],[153,258],[145,254],[136,261],[126,257],[119,251]],
+    [[105,259],[116,260],[122,269],[116,280],[108,273],[103,265]],
+    [[159,271],[169,269],[176,274],[172,280],[162,279]]
+  ];
+  land.forEach((sourcePoints) => {
+    const points = sourcePoints.map(([x, y]) => [x, 254 + (y - 238) * 0.7]);
+    const [[x, y], ...rest] = points;
+    const deltas = rest.map(([nextX, nextY], index) => {
+      const [previousX, previousY] = points[index];
+      return [nextX - previousX, nextY - previousY];
+    });
+    doc.lines(deltas, x, y, [1, 1], 'F', true);
+  });
+}
+
+export function buildAttestationPdf(student) {
   const result = calculateExamAverage(student);
   if (result.average === null || result.average < 10) {
     throw new Error('Attestation is only available for students with an average of 10/20 or higher.');
   }
 
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
   const studentName = cleanText(getStudentName(student), 'Student');
-  const resolvedClassName = cleanText(className || student?.className, 'Classe');
-  const average = result.average.toFixed(2);
-  const issuedAt = new Intl.DateTimeFormat('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }).format(new Date());
-  const ref = referenceNumber(student);
+  const level = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].includes(student?.examLevel) ? student.examLevel : '';
+  const issueDate = formatGermanDate(new Date());
 
   doc.setProperties({
-    title: `Attestation de réussite - ${studentName}`,
-    subject: 'Sprach-Pr-fung attestation de réussite',
-    creator: 'Sprach-Pr-fung'
+    title: `Zertifikat - ${studentName}`,
+    subject: 'Deutsch Sprachprüfung Zertifikat',
+    creator: SCHOOL_NAME
   });
 
-  doc.setFillColor(252, 250, 246);
-  doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, 'F');
+  drawBackground(doc);
 
-  doc.setDrawColor(20, 50, 92);
-  doc.setLineWidth(1.2);
-  doc.rect(MARGIN, MARGIN, PAGE_WIDTH - MARGIN * 2, PAGE_HEIGHT - MARGIN * 2);
-  doc.setDrawColor(196, 156, 80);
-  doc.setLineWidth(0.4);
-  doc.rect(MARGIN + 3, MARGIN + 3, PAGE_WIDTH - (MARGIN + 3) * 2, PAGE_HEIGHT - (MARGIN + 3) * 2);
+  centered(doc, SCHOOL_NAME, 21, 11, 'bold', 105);
+  centered(doc, 'Zertifikat', 48, 31, 'bold', 40);
+  centered(doc, studentName, 74, 21, 'normal', 42);
+  centered(doc, `geboren am ${formatGermanDate(student?.dateOfBirth)}`, 87, 11, 'normal', 70);
+  centered(doc, 'hat die Prüfung', 107, 10, 'normal', 88);
+  centered(doc, `Deutsch Sprachprüfung${level ? ` ${level}` : ''}`, 126, 22, 'bold', 38);
+  centered(doc, 'am Prüfungszentrum', 145, 10, 'normal', 88);
+  centered(doc, SCHOOL_NAME, 159, 15, 'bold', 45);
+  centered(doc, `${SCHOOL_CITY}, Morocco`, 170, 11, 'normal', 65);
+  centered(doc, 'gut bestanden', 195, 20, 'bold', 40);
 
-  doc.setDrawColor(226, 214, 190);
-  doc.setLineWidth(0.2);
-  for (let x = MARGIN + 12; x < PAGE_WIDTH - MARGIN; x += 12) {
-    doc.line(x, MARGIN + 12, x - 42, PAGE_HEIGHT - MARGIN - 12);
-  }
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(65);
+  doc.text(`Ort: ${SCHOOL_CITY}`, 29, 218);
+  doc.text(`Datum: ${issueDate}`, 181, 218, { align: 'right' });
 
-  doc.setFillColor(16, 39, 82);
-  doc.roundedRect(PAGE_WIDTH / 2 - 13, 28, 26, 20, 2, 2, 'F');
-  doc.setTextColor(255, 248, 234);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('SP', PAGE_WIDTH / 2, 41, { align: 'center' });
-
-  drawCenteredLines(doc, ['Sprach-Pr-fung'], 58, {
-    size: 18,
-    color: [16, 39, 82],
-    font: 'helvetica',
-    style: 'bold',
-    lineHeight: 8
-  });
-  drawCenteredLines(doc, ['École de langue allemande'], 67, {
-    size: 10,
-    color: [98, 112, 134],
-    lineHeight: 6
-  });
-
-  drawCenteredLines(doc, ['Attestation de réussite'], 88, {
-    size: 24,
-    color: [16, 39, 82],
-    font: 'times',
-    style: 'bold',
-    lineHeight: 10
-  });
-
-  doc.setDrawColor(196, 156, 80);
-  doc.line(60, 101, 150, 101);
-
-  const paragraph = `Nous attestons que ${studentName}, inscrit(e) dans la classe ${resolvedClassName}, a réussi l'examen de langue allemande avec une moyenne de ${average}/20.`;
-  const paragraphLines = splitText(doc, paragraph, 150);
-  let y = 121;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(12);
-  doc.setTextColor(42, 53, 71);
-  paragraphLines.forEach((line) => {
-    doc.text(line, PAGE_WIDTH / 2, y, { align: 'center' });
-    y += 7;
-  });
-
-  y += 9;
-  const tableX = 43;
-  const tableY = y;
-  const rowHeight = 12;
-  doc.setDrawColor(207, 194, 168);
-  doc.setFillColor(245, 239, 226);
-  doc.rect(tableX, tableY, 124, rowHeight, 'FD');
-  doc.setFont('helvetica', 'bold');
+  doc.setDrawColor(145);
+  doc.setLineWidth(0.25);
+  doc.line(31, 239, 83, 239);
+  doc.line(127, 239, 179, 239);
   doc.setFontSize(10);
-  doc.setTextColor(16, 39, 82);
-  doc.text('Section', tableX + 6, tableY + 8);
-  doc.text('Résultat', tableX + 92, tableY + 8);
+  doc.text('Administrator', 57, 245, { align: 'center' });
+  doc.text('School Director', 153, 245, { align: 'center' });
 
-  examKeys.forEach((key, index) => {
-    const rowY = tableY + rowHeight * (index + 1);
-    doc.setFillColor(index % 2 === 0 ? 255 : 250, index % 2 === 0 ? 255 : 251, index % 2 === 0 ? 255 : 245);
-    doc.rect(tableX, rowY, 124, rowHeight, 'FD');
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(42, 53, 71);
-    doc.text(getExamLabel(key), tableX + 6, rowY + 8);
-    doc.text(getExamDisplay(student, key), tableX + 92, rowY + 8);
-  });
-
-  const averageY = tableY + rowHeight * 5;
-  doc.setFillColor(16, 39, 82);
-  doc.rect(tableX, averageY, 124, rowHeight, 'F');
-  doc.setTextColor(255, 248, 234);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Moyenne finale', tableX + 6, averageY + 8);
-  doc.text(`${average}/20`, tableX + 92, averageY + 8);
-
-  doc.setTextColor(80, 91, 112);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.text(`Date d'émission : ${issuedAt}`, MARGIN + 12, 220);
-  doc.text(`Référence : ${ref}`, MARGIN + 12, 228);
-
-  doc.setDrawColor(124, 135, 152);
-  doc.line(MARGIN + 12, 252, MARGIN + 72, 252);
-  doc.line(PAGE_WIDTH - MARGIN - 72, 252, PAGE_WIDTH - MARGIN - 12, 252);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(42, 53, 71);
-  doc.text('Signature de l\'école', MARGIN + 12, 260);
-  doc.text('Cachet officiel', PAGE_WIDTH - MARGIN - 72, 260);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(98, 112, 134);
-  doc.text('Cette attestation est délivrée par Sprach-Pr-fung et ne constitue pas un certificat officiel ÖSD.', PAGE_WIDTH / 2, 276, {
-    align: 'center'
-  });
+  drawWorldMap(doc);
 
   return {
     doc,
-    fileName: `attestation-${safeFilePart(studentName)}.pdf`,
-    reference: ref
+    fileName: `zertifikat-${safeFilePart(studentName)}.pdf`
   };
 }

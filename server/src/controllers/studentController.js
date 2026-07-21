@@ -31,6 +31,11 @@ const studentSchema = z.object({
   firstName: z.string().min(1).trim(),
   lastName: z.string().min(1).trim(),
   studentNumber: z.string().trim().optional().default(''),
+  dateOfBirth: z.preprocess(
+    (value) => value === '' || value === null ? undefined : value,
+    z.coerce.date().optional()
+  ),
+  examLevel: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']).or(z.literal('')).optional().default(''),
   comments: z.string().trim().optional().default(''),
   classRoom: objectId,
   notes: z.array(noteSchema).optional(),
@@ -47,6 +52,8 @@ function studentPayload(data, classRoom, adminId) {
     firstName: data.firstName,
     lastName: data.lastName,
     studentNumber: data.studentNumber,
+    dateOfBirth: data.dateOfBirth,
+    examLevel: data.examLevel,
     comments: data.comments,
     classRoom: classRoom._id,
     className: classRoom.className,

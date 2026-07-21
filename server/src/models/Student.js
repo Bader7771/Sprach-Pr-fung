@@ -13,6 +13,8 @@ const studentSchema = new mongoose.Schema(
     lastName: { type: String, trim: true },
     fullName: { type: String, trim: true },
     studentNumber: { type: String, trim: true, default: '' },
+    dateOfBirth: { type: Date },
+    examLevel: { type: String, enum: ['', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'], default: '' },
     comments: { type: String, trim: true, default: '' },
     classRoom: { type: mongoose.Schema.Types.ObjectId, ref: 'ClassRoom', required: true },
     className: { type: String, required: true, trim: true },

@@ -169,6 +169,8 @@ export default function Dashboard() {
         firstName: student.firstName || student.fullName?.split(' ')[0] || '',
         lastName: student.lastName || student.fullName?.split(' ').slice(1).join(' ') || '',
         studentNumber: student.studentNumber || '',
+        dateOfBirth: student.dateOfBirth || '',
+        examLevel: student.examLevel || '',
         comments: student.comments || '',
         classRoom: student.classRoom || selectedClassId,
         notes: student.notes || [],
@@ -310,7 +312,7 @@ export default function Dashboard() {
                     disabled={generatingAttestationId === selectedStudent._id}
                   >
                     <FileDown size={16} />
-                    {generatingAttestationId === selectedStudent._id ? 'Generating...' : 'Download Attestation PDF'}
+                    {generatingAttestationId === selectedStudent._id ? 'Generating...' : 'Print Attestation'}
                   </button>
                 )}
                 <button className="btn danger" onClick={() => setConfirm({ type: 'student', item: selectedStudent })}><Trash2 size={16} /> Delete Student</button>
