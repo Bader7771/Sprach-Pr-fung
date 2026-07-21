@@ -166,6 +166,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); box-sh
   gap: 18px;
   align-items: start;
 }
+.classPanelToggle { display: none; }
 .panel {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -394,17 +395,50 @@ tr:last-child td { border-bottom: 0; }
 
 @media (max-width: 760px) {
   .dashboard.simple, .authPage { padding: 16px; }
+  .dashboard.simple { width: 100%; overflow-x: clip; }
+  .dashboard.simple > *, .dashboardGrid > *, .panelHead > *, .toolbar > * { min-width: 0; }
   .appHeader { align-items: flex-start; flex-direction: column; }
+  .appHeader h1 { font-size: clamp(28px, 9vw, 38px); overflow-wrap: anywhere; }
+  .appHeader .btn { width: 100%; }
   .statsGrid, .formGrid, .studentForm { grid-template-columns: 1fr; }
+  .statsGrid { gap: 10px; }
+  .stat { min-height: 90px; }
+  .dashboardGrid { gap: 12px; }
+  .classPanelToggle { display: inline-flex; width: 100%; }
+  .classPanel { display: none; }
+  .classPanel.mobileOpen { display: block; }
+  .panel { padding: 14px; }
+  .panelHead { align-items: flex-start; }
+  .panelHead.wrap { flex-direction: column; }
+  .panelHead h2, .panelHead span, .classItem strong, .classItem small { overflow-wrap: anywhere; }
   .formActions.wide { justify-content: stretch; }
-  .formActions.wide .btn { flex: 1; }
+  .formActions, .formActions.wide { width: 100%; }
+  .formActions .btn, .formActions.wide .btn { flex: 1 1 100%; width: 100%; }
   .toolbar { width: 100%; }
   .inlineSearch { width: 100%; min-width: 0; }
   .toolbar .btn { width: 100%; }
+  .tableWrap { max-width: 100%; -webkit-overflow-scrolling: touch; }
+  .tableWrap::after { content: "Swipe to view all columns"; display: block; position: sticky; left: 0; padding: 8px 12px; color: var(--muted); background: var(--panel-2); font-size: 11px; font-weight: 800; }
+  th, td { padding: 11px 12px; }
+  .iconBtn { width: 40px; height: 40px; }
   .classItem { align-items: flex-start; flex-direction: column; }
   .classActions { justify-content: flex-start; }
+  .classActions .miniBtn { min-height: 36px; display: inline-flex; align-items: center; }
   .noteItem { grid-template-columns: 1fr; align-items: stretch; }
   .examSummaryGrid { grid-template-columns: 1fr; }
+  .rowActions { width: 100%; }
+  .detailPanel .rowActions .btn { width: 100%; }
+  .studentComment { overflow-wrap: anywhere; }
+  .modalOverlay { align-items: center; padding: 12px; overflow-y: auto; }
+  .modal { max-height: calc(100dvh - 24px); padding: 18px; overflow-y: auto; }
+  .modalActions { width: 100%; }
+  .modalActions .btn { flex: 1 1 0; min-width: 0; }
+}
+
+@media (max-width: 360px) {
+  .dashboard.simple { padding: 10px; }
+  .panel { padding: 12px; }
+  .classActions, .rowActions { gap: 8px; }
 }
 
 .landingPage {

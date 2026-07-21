@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import egimLogo from '../assets/egim-logo.jpg';
 import { calculateExamAverage, getStudentName } from './results.js';
 
 const PAGE_WIDTH = 210;
@@ -153,17 +154,19 @@ function drawSignatures(doc, issueDate) {
   doc.setFont('times', 'normal');
   doc.setFontSize(10.5);
   doc.setTextColor(...MUTED_INK);
-  doc.text(`Ort: ${SCHOOL_CITY}`, 28, 222);
+  doc.text('Ort: MEKNES', 28, 222);
   doc.text(`Ausstellungsdatum: ${issueDate}`, 182, 222, { align: 'right' });
 
   doc.setDrawColor(120, 125, 126);
   doc.setLineWidth(0.25);
-  doc.line(28, 244, 83, 244);
-  doc.line(127, 244, 182, 244);
+  doc.line(28, 242, 83, 242);
+  doc.line(127, 242, 182, 242);
   doc.setFontSize(9.5);
   doc.setTextColor(...INK);
-  doc.text('Administrator', 55.5, 250, { align: 'center' });
-  doc.text('Schulleitung', 154.5, 250, { align: 'center' });
+  doc.text('Kursleiter', 55.5, 247, { align: 'center' });
+  doc.text('CHTATOU BILAL', 55.5, 251, { align: 'center' });
+  doc.text('Stempel der Institution', 154.5, 247, { align: 'center' });
+  doc.text('EL MEHDI CHALH', 154.5, 251, { align: 'center' });
 }
 
 export function buildAttestationPdf(student) {
@@ -185,16 +188,15 @@ export function buildAttestationPdf(student) {
 
   drawBackground(doc);
 
-  centered(doc, SCHOOL_NAME.toUpperCase(), 24, 11, 'bold', MUTED_INK, 145);
+  doc.addImage(egimLogo, 'JPEG', 89, 13, 32, 32, 'egim-logo', 'MEDIUM');
   doc.setCharSpace(1.1);
   centered(doc, 'Zertifikat', 55, 38, 'normal', [67, 68, 62], 165);
   doc.setCharSpace(0);
   drawHeadingOrnament(doc, 64);
 
   centered(doc, studentName, 87, 27, 'bold', INK, 174);
-  centered(doc, `geboren am ${formatGermanDate(student?.dateOfBirth)}`, 102, 13.5, 'normal', MUTED_INK);
 
-  centered(doc, 'hat die Prüfung', 123, 12.5, 'normal', MUTED_INK);
+  centered(doc, 'hat die Prüfung', 113, 12.5, 'normal', MUTED_INK);
   centered(doc, `Deutsch Sprachprüfung${level ? ` ${level}` : ''}`, 145, 25.5, 'bold', INK, 180);
 
   centered(doc, 'am Prüfungszentrum', 164, 12.5, 'normal', MUTED_INK);

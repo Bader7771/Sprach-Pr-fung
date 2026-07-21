@@ -1,4 +1,4 @@
-import { FileDown, LogOut, Plus, Search, Trash2 } from 'lucide-react';
+import { FileDown, LogOut, Menu, Plus, Search, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import http from '../api/http.js';
@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [savingStudentId, setSavingStudentId] = useState('');
   const [generatingAttestationId, setGeneratingAttestationId] = useState('');
+  const [classesOpen, setClassesOpen] = useState(false);
 
   const selectedClass = useMemo(
     () => classes.find((item) => item._id === selectedClassId),
@@ -229,7 +230,17 @@ export default function Dashboard() {
       </section>
 
       <section className="dashboardGrid">
-        <aside className="panel classPanel">
+        <button
+          type="button"
+          className="btn secondary classPanelToggle"
+          onClick={() => setClassesOpen((open) => !open)}
+          aria-expanded={classesOpen}
+          aria-controls="dashboard-class-panel"
+        >
+          {classesOpen ? <X size={18} /> : <Menu size={18} />}
+          {classesOpen ? 'Close Classes' : 'Open Classes'}
+        </button>
+        <aside id="dashboard-class-panel" className={`panel classPanel${classesOpen ? ' mobileOpen' : ''}`}>
           <div className="panelHead">
             <div>
               <h2>Classes</h2>
@@ -242,7 +253,7 @@ export default function Dashboard() {
               <button
                 key={item._id}
                 className={`classItem ${selectedClassId === item._id ? 'active' : ''}`}
-                onClick={() => { setSelectedClassId(item._id); setSelectedStudent(null); }}
+                onClick={() => { setSelectedClassId(item._id); setSelectedStudent(null); setClassesOpen(false); }}
               >
                 <span>
                   <strong>{item.className}</strong>
