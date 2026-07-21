@@ -23,14 +23,14 @@ export function normalizeExamValue(value) {
 export function getExamDisplay(student, key) {
   if (student?.examAbsences?.[key]) return 'Abwesend';
   const value = normalizeExamValue(student?.exams?.[key]);
-  return value === '' ? '-' : `${Number(value).toFixed(2)}/20`;
+  return value === '' ? '-' : `${Number(value).toFixed(2)}/100`;
 }
 
 export function calculateExamAverage(student) {
   const scores = examKeys
     .filter((key) => !student?.examAbsences?.[key])
     .map((key) => normalizeExamValue(student?.exams?.[key]))
-    .filter((value) => value !== '');
+    .filter((value) => value !== '' && value >= 0 && value <= 100);
 
   return {
     average: scores.length
@@ -43,7 +43,7 @@ export function calculateExamAverage(student) {
 
 export function hasPassedExam(student) {
   const result = calculateExamAverage(student);
-  return result.average !== null && result.average >= 10;
+  return result.average !== null && result.average >= 60 && result.average <= 100;
 }
 
 export function hasAnyExamResult(student) {

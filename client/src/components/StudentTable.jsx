@@ -48,7 +48,7 @@ function ExamEditorRow({ student, onView, onEdit, onDelete, onSaveExams, onPrint
               id={`${student._id}-${key}`}
               type="number"
               min="0"
-              max="20"
+              max="100"
               step="0.01"
               value={draft.exams[key]}
               disabled={draft.examAbsences[key]}
@@ -67,7 +67,7 @@ function ExamEditorRow({ student, onView, onEdit, onDelete, onSaveExams, onPrint
         </td>
       ))}
       <td>
-        <strong>{average.average === null ? '-' : average.average.toFixed(2)}</strong>
+        <strong>{average.average === null ? '-' : `${average.average.toFixed(2)}/100`}</strong>
         {average.absentCount > 0 && <small className="mutedLine">{average.absentCount} absent</small>}
       </td>
       <td>

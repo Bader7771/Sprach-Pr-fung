@@ -7,12 +7,12 @@ import { writeAudit } from '../services/auditService.js';
 const objectId = z.string().min(1);
 const noteSchema = z.object({
   subject: z.string().min(1).trim(),
-  grade: z.coerce.number().min(0).max(20),
+  grade: z.coerce.number().min(0).max(100),
   comment: z.string().trim().optional().default('')
 });
 const examScoreSchema = z.preprocess(
   (value) => value === '' || value === null ? undefined : value,
-  z.coerce.number().min(0).max(20).optional()
+  z.coerce.number().min(0).max(100).optional()
 );
 const examsSchema = z.object({
   exam1: examScoreSchema,

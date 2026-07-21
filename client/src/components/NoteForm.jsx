@@ -18,7 +18,7 @@ export default function NoteForm({ editing, onSubmit, onCancel }) {
       </label>
       <label>
         Grade
-        <input type="number" min="0" max="20" step="0.01" {...register('grade', { required: true, valueAsNumber: true })} />
+        <input type="number" min="0" max="100" step="0.01" {...register('grade', { required: true, valueAsNumber: true })} />
       </label>
       <label>
         Comment

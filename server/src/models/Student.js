@@ -21,15 +21,15 @@ const studentSchema = new mongoose.Schema(
     notes: [
       {
         subject: { type: String, required: true, trim: true },
-        grade: { type: Number, required: true, min: 0, max: 20 },
+        grade: { type: Number, required: true, min: 0, max: 100 },
         comment: { type: String, trim: true, default: '' }
       }
     ],
     exams: {
-      exam1: { type: Number, min: 0, max: 20 },
-      exam2: { type: Number, min: 0, max: 20 },
-      exam3: { type: Number, min: 0, max: 20 },
-      exam4: { type: Number, min: 0, max: 20 }
+      exam1: { type: Number, min: 0, max: 100 },
+      exam2: { type: Number, min: 0, max: 100 },
+      exam3: { type: Number, min: 0, max: 100 },
+      exam4: { type: Number, min: 0, max: 100 }
     },
     examAbsences: {
       exam1: { type: Boolean, default: false },

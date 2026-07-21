@@ -32,6 +32,8 @@ export default function Dashboard() {
   const [savingStudentId, setSavingStudentId] = useState('');
   const [generatingAttestationId, setGeneratingAttestationId] = useState('');
   const [classesOpen, setClassesOpen] = useState(false);
+  const [attestationStudent, setAttestationStudent] = useState(null);
+  const [certificateLevel, setCertificateLevel] = useState('');
 
   const selectedClass = useMemo(
     () => classes.find((item) => item._id === selectedClassId),
@@ -156,11 +158,11 @@ export default function Dashboard() {
     const invalidExam = examKeys.find((key) => {
       if (draft.examAbsences[key] || draft.exams[key] === '') return false;
       const value = Number(draft.exams[key]);
-      return !Number.isFinite(value) || value < 0 || value > 20;
+      return !Number.isFinite(value) || value < 0 || value > 100;
     });
 
     if (invalidExam) {
-      toast.error(`${getExamLabel(invalidExam)} score must be between 0 and 20.`);
+      toast.error(`${getExamLabel(invalidExam)} score must be between 0 and 100.`);
       return;
     }
 
@@ -193,17 +195,34 @@ export default function Dashboard() {
     }
   }
 
-  async function printAttestation(student) {
+  function requestAttestation(student) {
     if (!hasPassedExam(student)) {
-      toast.info('Attestation is available only for students with an average of 10/20 or higher.');
+      toast.info('Attestation is available only for students with an average between 60/100 and 100/100.');
+      return;
+    }
+
+    setCertificateLevel('');
+    setAttestationStudent(student);
+  }
+
+  function closeAttestationDialog() {
+    setAttestationStudent(null);
+    setCertificateLevel('');
+  }
+
+  async function printAttestation(event) {
+    event.preventDefault();
+    if (!attestationStudent || !certificateLevel) {
+      toast.info('Select an exam level before generating the certificate.');
       return;
     }
 
     try {
-      setGeneratingAttestationId(student._id);
-      const { doc, fileName } = buildAttestationPdf(student, student.className || selectedClass?.className);
+      setGeneratingAttestationId(attestationStudent._id);
+      const { doc, fileName } = buildAttestationPdf(attestationStudent, certificateLevel);
       doc.save(fileName);
       toast.success('Attestation PDF generated');
+      closeAttestationDialog();
     } catch (error) {
       toast.error(error.message || 'Attestation PDF could not be generated. Please try again.');
     } finally {
@@ -225,7 +244,7 @@ export default function Dashboard() {
       <section className="statsGrid">
         <StatCard label="Total Classes" value={analytics.totalClasses} />
         <StatCard label="Total Students" value={analytics.totalStudents} tone="blue" />
-        <StatCard label="Average Grade" value={analytics.averageGrade ?? 0} tone="amber" />
+        <StatCard label="Average Grade" value={`${Number(analytics.averageGrade ?? 0).toFixed(2)}/100`} tone="amber" />
         <StatCard label="Recent Students" value={analytics.recentStudents?.length || 0} tone="green" />
       </section>
 
@@ -300,7 +319,7 @@ export default function Dashboard() {
             onEdit={(student) => { setStudentEdit(student); setShowStudentForm(true); }}
             onDelete={(student) => setConfirm({ type: 'student', item: student })}
             onSaveExams={saveStudentExams}
-            onPrintAttestation={printAttestation}
+            onPrintAttestation={requestAttestation}
             savingStudentId={savingStudentId}
             generatingAttestationId={generatingAttestationId}
           />
@@ -313,13 +332,13 @@ export default function Dashboard() {
             <div className="panelHead wrap">
               <div>
                 <h2>{studentName(selectedStudent)}</h2>
-                <span>Average: {calculateExamAverage(selectedStudent).average?.toFixed(2) ?? Number(selectedStudent.finalNote || 0).toFixed(2)}</span>
+                <span>Average: {calculateExamAverage(selectedStudent).average?.toFixed(2) ?? Number(selectedStudent.finalNote || 0).toFixed(2)}/100</span>
               </div>
               <div className="rowActions">
                 {hasPassedExam(selectedStudent) && (
                   <button
                     className="btn secondary"
-                    onClick={() => printAttestation(selectedStudent)}
+                    onClick={() => requestAttestation(selectedStudent)}
                     disabled={generatingAttestationId === selectedStudent._id}
                   >
                     <FileDown size={16} />
@@ -337,7 +356,7 @@ export default function Dashboard() {
                 return (
                   <article className="examSummary" key={key}>
                     <span>{getExamLabel(key)}</span>
-                    <strong>{absent ? 'Absent' : Number.isFinite(Number(value)) ? `${Number(value).toFixed(2)}/20` : '-'}</strong>
+                    <strong>{absent ? 'Absent' : Number.isFinite(Number(value)) ? `${Number(value).toFixed(2)}/100` : '-'}</strong>
                   </article>
                 );
               })}
@@ -347,6 +366,33 @@ export default function Dashboard() {
           <p className="emptyState">Select a student to view exam results.</p>
         )}
       </section>
+
+      {attestationStudent && (
+        <div className="modalOverlay" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) closeAttestationDialog();
+        }}>
+          <form className="modal certificateLevelModal" onSubmit={printAttestation} role="dialog" aria-modal="true" aria-labelledby="certificate-level-title">
+            <h3 id="certificate-level-title">Choose exam level</h3>
+            <p>Select the level for {studentName(attestationStudent)}'s certificate.</p>
+            <label>
+              Exam Level
+              <select value={certificateLevel} onChange={(event) => setCertificateLevel(event.target.value)} required autoFocus>
+                <option value="">Select a level</option>
+                <option value="A2">A2</option>
+                <option value="B1">B1</option>
+                <option value="B2">B2</option>
+              </select>
+            </label>
+            <div className="modalActions">
+              <button type="button" className="btn ghost" onClick={closeAttestationDialog}>Cancel</button>
+              <button type="submit" className="btn primary" disabled={!certificateLevel || Boolean(generatingAttestationId)}>
+                <FileDown size={16} />
+                {generatingAttestationId ? 'Generating...' : 'Generate / Print Certificate'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <ConfirmModal
         open={Boolean(confirm)}

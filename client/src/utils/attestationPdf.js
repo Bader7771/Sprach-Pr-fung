@@ -168,15 +168,17 @@ function drawSignatures(doc, issueDate) {
   doc.text('EL MEHDI CHALH', 154.5, 251, { align: 'center' });
 }
 
-export function buildAttestationPdf(student) {
+export function buildAttestationPdf(student, selectedLevel) {
   const result = calculateExamAverage(student);
-  if (result.average === null || result.average < 10) {
-    throw new Error('Attestation is only available for students with an average of 10/20 or higher.');
+  if (result.average === null || result.average < 60 || result.average > 100) {
+    throw new Error('Attestation is only available for students with an average between 60/100 and 100/100.');
   }
+
+  const level = ['A2', 'B1', 'B2'].includes(selectedLevel) ? selectedLevel : '';
+  if (!level) throw new Error('Select an exam level before generating the certificate.');
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
   const studentName = cleanText(getStudentName(student), 'Student');
-  const level = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].includes(student?.examLevel) ? student.examLevel : '';
   const issueDate = formatGermanDate(new Date());
 
   doc.setProperties({
@@ -196,7 +198,8 @@ export function buildAttestationPdf(student) {
   centered(doc, studentName, 87, 27, 'bold', INK, 174);
 
   centered(doc, 'hat die Prüfung', 113, 12.5, 'normal', MUTED_INK);
-  centered(doc, `Deutsch Sprachprüfung${level ? ` ${level}` : ''}`, 145, 25.5, 'bold', INK, 180);
+  centered(doc, 'Deutsch Sprachprüfung', 143, 25.5, 'bold', INK, 180);
+  centered(doc, level, 153, 13.5, 'bold', INK, 180);
 
   centered(doc, 'am Prüfungszentrum', 164, 12.5, 'normal', MUTED_INK);
   centered(doc, SCHOOL_NAME, 179, 16, 'bold', INK, 165);
