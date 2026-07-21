@@ -1,12 +1,11 @@
 import { jsPDF } from 'jspdf';
-import egimLogo from '../assets/egim-logo.jpg';
+import egimLogo from '../assets/egim-logo-transparent.png';
 import { calculateExamAverage, getStudentName } from './results.js';
 
 const PAGE_WIDTH = 210;
 const PAGE_HEIGHT = 297;
 const CENTER_X = PAGE_WIDTH / 2;
 const SCHOOL_NAME = process.env.REACT_APP_SCHOOL_NAME || 'EGIM';
-const SCHOOL_CITY = process.env.REACT_APP_SCHOOL_CITY || 'Casablanca';
 const INK = [34, 42, 48];
 const MUTED_INK = [91, 99, 104];
 const GOLD = [170, 145, 82];
@@ -188,7 +187,7 @@ export function buildAttestationPdf(student) {
 
   drawBackground(doc);
 
-  doc.addImage(egimLogo, 'JPEG', 89, 13, 32, 32, 'egim-logo', 'MEDIUM');
+  doc.addImage(egimLogo, 'PNG', 89, 13, 32, 32, 'egim-logo', 'MEDIUM');
   doc.setCharSpace(1.1);
   centered(doc, 'Zertifikat', 55, 38, 'normal', [67, 68, 62], 165);
   doc.setCharSpace(0);
@@ -201,9 +200,9 @@ export function buildAttestationPdf(student) {
 
   centered(doc, 'am Prüfungszentrum', 164, 12.5, 'normal', MUTED_INK);
   centered(doc, SCHOOL_NAME, 179, 16, 'bold', INK, 165);
-  centered(doc, `${SCHOOL_CITY}, Morocco`, 191, 12.5, 'normal', MUTED_INK);
+  centered(doc, 'Morocco', 191, 12.5, 'normal', MUTED_INK);
 
-  centered(doc, 'gut bestanden', 211, 24, 'bold', INK, 170);
+  centered(doc, 'bestanden', 211, 24, 'bold', INK, 170);
 
   drawSignatures(doc, issueDate);
   drawWorldMap(doc);
