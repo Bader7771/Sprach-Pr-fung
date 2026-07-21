@@ -3,8 +3,12 @@ import { calculateExamAverage, getStudentName } from './results.js';
 
 const PAGE_WIDTH = 210;
 const PAGE_HEIGHT = 297;
+const CENTER_X = PAGE_WIDTH / 2;
 const SCHOOL_NAME = process.env.REACT_APP_SCHOOL_NAME || 'EGIM';
 const SCHOOL_CITY = process.env.REACT_APP_SCHOOL_CITY || 'Casablanca';
+const INK = [34, 42, 48];
+const MUTED_INK = [91, 99, 104];
+const GOLD = [170, 145, 82];
 
 function cleanText(value, fallback = '-') {
   return String(value || fallback)
@@ -33,35 +37,103 @@ function formatGermanDate(value) {
   }).format(date);
 }
 
-function centered(doc, text, y, size, style = 'normal', color = 45) {
-  doc.setFont('times', style);
+function fitFontSize(doc, text, preferredSize, maxWidth, minimumSize = 15) {
+  let size = preferredSize;
   doc.setFontSize(size);
-  doc.setTextColor(color);
-  doc.text(cleanText(text), PAGE_WIDTH / 2, y, { align: 'center' });
+  while (size > minimumSize && doc.getTextWidth(text) > maxWidth) {
+    size -= 0.5;
+    doc.setFontSize(size);
+  }
+  return size;
 }
 
-// Quiet, low-contrast latitude/longitude decoration used on the reference-style paper.
+function centered(doc, text, y, size, style = 'normal', color = INK, maxWidth = 170) {
+  const value = cleanText(text);
+  doc.setFont('times', style);
+  doc.setTextColor(...color);
+  doc.setFontSize(fitFontSize(doc, value, size, maxWidth));
+  doc.text(value, CENTER_X, y, { align: 'center' });
+}
+
+function drawSecurityWaves(doc, originX, originY, width, height, direction = 1) {
+  doc.setDrawColor(226, 227, 224);
+  doc.setLineWidth(0.12);
+  for (let line = 0; line < 18; line += 1) {
+    const inset = line * 0.72;
+    const y = originY + line * 1.45;
+    const sway = direction * (8 + line * 0.35);
+    doc.lines([
+      [width * 0.22, -height * 0.22],
+      [width * 0.32, height * 0.34],
+      [width * 0.24, -height * 0.08],
+      [width * 0.22, -height * 0.04]
+    ], originX + inset - sway, y, [1, 1], 'S', false);
+  }
+}
+
 function drawBackground(doc) {
-  doc.setFillColor(250, 250, 249);
+  doc.setFillColor(252, 252, 249);
   doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, 'F');
-  doc.setDrawColor(236, 236, 234);
-  doc.setLineWidth(0.18);
-  [28, 52, 76, 100, 124, 148, 172].forEach((x) => doc.ellipse(105, 151, x, 112, 'S'));
-  [70, 94, 118, 142, 166, 190, 214, 238].forEach((y) => doc.ellipse(105, 151, 78, Math.abs(y - 151) + 8, 'S'));
+
+  // Fine guilloche-style linework, kept outside the primary reading column.
+  drawSecurityWaves(doc, 4, 13, 102, 94, 1);
+  drawSecurityWaves(doc, 105, 225, 102, 94, -1);
+
+  doc.setDrawColor(232, 232, 228);
+  doc.setLineWidth(0.13);
+  for (let radius = 20; radius <= 88; radius += 8.5) {
+    doc.ellipse(CENTER_X, 151, radius, radius * 1.28, 'S');
+  }
+  for (let offset = -54; offset <= 54; offset += 9) {
+    doc.ellipse(CENTER_X + offset * 0.12, 151, 72, 18 + Math.abs(offset) * 0.65, 'S');
+  }
+
+  // Formal double frame with restrained corner ornaments.
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.65);
+  doc.rect(8, 8, PAGE_WIDTH - 16, PAGE_HEIGHT - 16);
+  doc.setDrawColor(207, 199, 176);
+  doc.setLineWidth(0.2);
+  doc.rect(11.5, 11.5, PAGE_WIDTH - 23, PAGE_HEIGHT - 23);
+
+  const corners = [[15, 15, 1, 1], [195, 15, -1, 1], [15, 282, 1, -1], [195, 282, -1, -1]];
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.35);
+  corners.forEach(([x, y, sx, sy]) => {
+    doc.line(x, y, x + sx * 17, y);
+    doc.line(x, y, x, y + sy * 17);
+    doc.line(x + sx * 3, y + sy * 3, x + sx * 11, y + sy * 3);
+    doc.line(x + sx * 3, y + sy * 3, x + sx * 3, y + sy * 11);
+  });
+}
+
+function drawHeadingOrnament(doc, y) {
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.3);
+  doc.line(62, y, 96, y);
+  doc.line(114, y, 148, y);
+  doc.setFillColor(...GOLD);
+  doc.circle(CENTER_X, y, 1.15, 'F');
+  doc.circle(100.5, y, 0.45, 'F');
+  doc.circle(109.5, y, 0.45, 'F');
 }
 
 function drawWorldMap(doc) {
-  doc.setFillColor(224, 224, 222);
+  doc.setFillColor(195, 199, 196);
   const land = [
-    [[37,247],[43,242],[51,241],[58,245],[55,251],[48,253],[45,260],[40,256]],
-    [[59,261],[65,263],[69,270],[66,280],[61,274]],
-    [[86,246],[94,240],[107,241],[111,246],[105,250],[100,258],[94,255],[90,261],[84,255]],
-    [[111,242],[124,238],[140,241],[149,246],[160,244],[173,249],[168,255],[153,258],[145,254],[136,261],[126,257],[119,251]],
-    [[105,259],[116,260],[122,269],[116,280],[108,273],[103,265]],
-    [[159,271],[169,269],[176,274],[172,280],[162,279]]
+    [[0,8],[5,3],[13,1],[22,4],[27,9],[24,14],[18,14],[15,20],[10,17],[8,12],[3,12]],
+    [[18,20],[23,22],[26,29],[24,39],[20,35],[17,27]],
+    [[35,8],[42,3],[51,4],[55,8],[51,12],[46,13],[43,19],[38,17],[34,12]],
+    [[53,7],[63,3],[76,4],[84,7],[96,6],[107,11],[103,16],[93,17],[87,14],[79,19],[70,17],[65,13],[58,14]],
+    [[50,18],[58,18],[63,24],[60,36],[55,40],[51,33],[48,25]],
+    [[96,29],[104,27],[111,31],[108,37],[100,37]]
   ];
-  land.forEach((sourcePoints) => {
-    const points = sourcePoints.map(([x, y]) => [x, 254 + (y - 238) * 0.7]);
+  const scale = 0.65;
+  const mapWidth = 111 * scale;
+  const startX = CENTER_X - mapWidth / 2;
+  const startY = 255;
+  land.forEach((shape) => {
+    const points = shape.map(([x, y]) => [startX + x * scale, startY + y * scale]);
     const [[x, y], ...rest] = points;
     const deltas = rest.map(([nextX, nextY], index) => {
       const [previousX, previousY] = points[index];
@@ -69,6 +141,29 @@ function drawWorldMap(doc) {
     });
     doc.lines(deltas, x, y, [1, 1], 'F', true);
   });
+
+  doc.setDrawColor(218, 218, 214);
+  doc.setLineWidth(0.12);
+  doc.ellipse(CENTER_X, 267, 41, 14, 'S');
+  doc.ellipse(CENTER_X, 267, 29, 14, 'S');
+  doc.line(64, 267, 146, 267);
+}
+
+function drawSignatures(doc, issueDate) {
+  doc.setFont('times', 'normal');
+  doc.setFontSize(10.5);
+  doc.setTextColor(...MUTED_INK);
+  doc.text(`Ort: ${SCHOOL_CITY}`, 28, 222);
+  doc.text(`Ausstellungsdatum: ${issueDate}`, 182, 222, { align: 'right' });
+
+  doc.setDrawColor(120, 125, 126);
+  doc.setLineWidth(0.25);
+  doc.line(28, 244, 83, 244);
+  doc.line(127, 244, 182, 244);
+  doc.setFontSize(9.5);
+  doc.setTextColor(...INK);
+  doc.text('Administrator', 55.5, 250, { align: 'center' });
+  doc.text('Schulleitung', 154.5, 250, { align: 'center' });
 }
 
 export function buildAttestationPdf(student) {
@@ -90,31 +185,25 @@ export function buildAttestationPdf(student) {
 
   drawBackground(doc);
 
-  centered(doc, SCHOOL_NAME, 21, 11, 'bold', 105);
-  centered(doc, 'Zertifikat', 48, 31, 'bold', 40);
-  centered(doc, studentName, 74, 21, 'normal', 42);
-  centered(doc, `geboren am ${formatGermanDate(student?.dateOfBirth)}`, 87, 11, 'normal', 70);
-  centered(doc, 'hat die Prüfung', 107, 10, 'normal', 88);
-  centered(doc, `Deutsch Sprachprüfung${level ? ` ${level}` : ''}`, 126, 22, 'bold', 38);
-  centered(doc, 'am Prüfungszentrum', 145, 10, 'normal', 88);
-  centered(doc, SCHOOL_NAME, 159, 15, 'bold', 45);
-  centered(doc, `${SCHOOL_CITY}, Morocco`, 170, 11, 'normal', 65);
-  centered(doc, 'gut bestanden', 195, 20, 'bold', 40);
+  centered(doc, SCHOOL_NAME.toUpperCase(), 24, 11, 'bold', MUTED_INK, 145);
+  doc.setCharSpace(1.1);
+  centered(doc, 'Zertifikat', 55, 38, 'normal', [67, 68, 62], 165);
+  doc.setCharSpace(0);
+  drawHeadingOrnament(doc, 64);
 
-  doc.setFont('times', 'normal');
-  doc.setFontSize(9.5);
-  doc.setTextColor(65);
-  doc.text(`Ort: ${SCHOOL_CITY}`, 29, 218);
-  doc.text(`Datum: ${issueDate}`, 181, 218, { align: 'right' });
+  centered(doc, studentName, 87, 27, 'bold', INK, 174);
+  centered(doc, `geboren am ${formatGermanDate(student?.dateOfBirth)}`, 102, 13.5, 'normal', MUTED_INK);
 
-  doc.setDrawColor(145);
-  doc.setLineWidth(0.25);
-  doc.line(31, 239, 83, 239);
-  doc.line(127, 239, 179, 239);
-  doc.setFontSize(10);
-  doc.text('Administrator', 57, 245, { align: 'center' });
-  doc.text('School Director', 153, 245, { align: 'center' });
+  centered(doc, 'hat die Prüfung', 123, 12.5, 'normal', MUTED_INK);
+  centered(doc, `Deutsch Sprachprüfung${level ? ` ${level}` : ''}`, 145, 25.5, 'bold', INK, 180);
 
+  centered(doc, 'am Prüfungszentrum', 164, 12.5, 'normal', MUTED_INK);
+  centered(doc, SCHOOL_NAME, 179, 16, 'bold', INK, 165);
+  centered(doc, `${SCHOOL_CITY}, Morocco`, 191, 12.5, 'normal', MUTED_INK);
+
+  centered(doc, 'gut bestanden', 211, 24, 'bold', INK, 170);
+
+  drawSignatures(doc, issueDate);
   drawWorldMap(doc);
 
   return {
